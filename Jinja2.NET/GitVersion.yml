@@ -1,0 +1,13 @@
+assembly-versioning-scheme: MajorMinorPatch
+mode: ContinuousDeployment
+next-version: 1.4.0
+branches:
+  master:
+    regex: ^master$
+    is-release-branch: true
+  develop:
+    regex: ^develop$
+
+ignore:
+  sha: []
+merge-message-formats: {}
