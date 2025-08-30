@@ -385,3 +385,8 @@ This project is licensed under the MIT License — free for commercial and perso
 We welcome contributions! If you find a bug or want to help implement a missing feature, feel free to open an issue or submit a pull request.
 
 For compatibility details, see the tests: [Jinja2.NET.Tests/TemplateTests.cs](./Jinja2.NET.Tests/TemplateTests.cs)
+
+## History
+- 1.4.0: Initial version. (Sorry, it was a copy/paste error, but I cannot roll it back on NuGet)
+- 1.4.1: nuget package links update
+- 
