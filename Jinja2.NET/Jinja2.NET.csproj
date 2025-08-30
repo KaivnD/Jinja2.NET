@@ -29,12 +29,14 @@
 
     <!-- Docs -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    
+    <NoWarn>$(NoWarn);CS1591</NoWarn> <!-- To disable CS1591 -->
   </PropertyGroup>
 
-  <!-- Pack README and icon from repo root -->
+  <!-- Pack README and icon -->
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="\" />
-    <None Include="..\assets\icon.png" Pack="true" PackagePath="\" />
+    <None Include="assets\icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
