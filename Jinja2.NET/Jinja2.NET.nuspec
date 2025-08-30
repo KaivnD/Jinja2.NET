@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Jinja2.NET</id>
+    <version>$version$</version>
+    <title>Jinja2.NET</title>
+    <authors>Jinja2.NET Contributors</authors>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/OWNER/REPO</projectUrl>
+    <repository type="git" url="https://github.com/OWNER/REPO" />
+    <icon>icon.png</icon>
+    <readme>README.md</readme>
+    <description>Native .NET implementation of the Jinja2 templating engine.</description>
+    <tags>jinja2 templating templates rendering dotnet ai gguf</tags>
+  </metadata>
+  <files>
+    <file src="..\README.md" target="README.md" />
+    <file src="..\assets\icon.png" target="icon.png" />
+    <file src="bin\Release\net9.0\Jinja2.NET.dll" target="lib\net9.0\" />
+    <file src="bin\Release\net9.0\Jinja2.NET.xml" target="lib\net9.0\" />
+  </files>
+</package>

@@ -1,0 +1,283 @@
+     Set_Reassignment_Inside_Nested_For Success
+AST:
+TemplateNode
+  BlockNode: set
+    Arguments:
+      - IdentifierNode: "x"
+      - LiteralNode: 1
+    End Arguments--------
+  BlockNode: for
+    Arguments:
+      - IdentifierNode: "i"
+      - IdentifierNode: "in"
+      -       ListLiteralNode
+        LiteralNode: 1
+        LiteralNode: 2
+    End Arguments--------
+    BlockNode: for
+      Arguments:
+        - IdentifierNode: "j"
+        - IdentifierNode: "in"
+        -         ListLiteralNode
+          LiteralNode: 3
+          LiteralNode: 4
+      End Arguments--------
+      BlockNode: set
+        Arguments:
+          - IdentifierNode: "x"
+          - IdentifierNode: "j"
+        End Arguments--------
+      VariableNode:
+        IdentifierNode: x
+  VariableNode:
+    IdentifierNode: x
+
+----
+After Parse: Number:1 at Jinja2.NET.Models.SourceLocation
+After Parse: BlockEnd:%} at Jinja2.NET.Models.SourceLocation
+After Parse: BlockEnd:%} at Jinja2.NET.Models.SourceLocation
+After Parse: Identifier:j at Jinja2.NET.Models.SourceLocation
+After Parse: VariableEnd:}} at Jinja2.NET.Models.SourceLocation
+After Parse: VariableEnd:}} at Jinja2.NET.Models.SourceLocation
+DEBUG: RenderSetBlock called for x, IsLoopScoped=False
+TRACE: Set: x = 1 (current scope)
+TRACE: Inherited x = 1 in new scope
+After PushScopeWithInheritance Scope[0]: x=1
+After PushScopeWithInheritance Scope[1]: x=1
+TRACE: Set: i = 1 (current scope)
+TRACE: Set: loop = { index0 = 0, index = 1, first = True, last = False } (current scope)
+TRACE: Inherited x = 1 in new scope
+After PushScopeWithInheritance Scope[0]: x=1
+After PushScopeWithInheritance Scope[1]: x=1, i=1, loop={ index0 = 0, index = 1, first = True, last = False }
+After PushScopeWithInheritance Scope[2]: x=1
+TRACE: Set: j = 3 (current scope)
+TRACE: Set: loop = { index0 = 0, index = 1, first = True, last = False } (current scope)
+DEBUG: RenderSetBlock called for x, j, IsLoopScoped=False
+TRACE: Get: j = 3 (from scope)
+TRACE: Set: x = 3 (current scope)
+TRACE: Get: x = 3 (from scope)
+TRACE: Set: j = 4 (current scope)
+TRACE: Set: loop = { index0 = 1, index = 2, first = False, last = True } (current scope)
+DEBUG: RenderSetBlock called for x, j, IsLoopScoped=False
+TRACE: Get: j = 4 (from scope)
+TRACE: Set: x = 4 (current scope)
+TRACE: Get: x = 4 (from scope)
+TRACE: PropagateVariablesToParent start
+TRACE: Propagated x = 4 to parent scope
+After PropagateVariablesToParent Scope[0]: x=1
+After PropagateVariablesToParent Scope[1]: x=4, i=1, loop={ index0 = 0, index = 1, first = True, last = False }
+After PropagateVariablesToParent Scope[2]: x=4, j=4, loop={ index0 = 1, index = 2, first = False, last = True }
+TRACE: PopScope
+TRACE: Set: i = 2 (current scope)
+TRACE: Set: loop = { index0 = 1, index = 2, first = False, last = True } (current scope)
+TRACE: Inherited x = 4 in new scope
+After PushScopeWithInheritance Scope[0]: x=1
+After PushScopeWithInheritance Scope[1]: x=4, i=2, loop={ index0 = 1, index = 2, first = False, last = True }
+After PushScopeWithInheritance Scope[2]: x=4
+TRACE: Set: j = 3 (current scope)
+TRACE: Set: loop = { index0 = 0, index = 1, first = True, last = False } (current scope)
+DEBUG: RenderSetBlock called for x, j, IsLoopScoped=False
+TRACE: Get: j = 3 (from scope)
+TRACE: Set: x = 3 (current scope)
+TRACE: Get: x = 3 (from scope)
+TRACE: Set: j = 4 (current scope)
+TRACE: Set: loop = { index0 = 1, index = 2, first = False, last = True } (current scope)
+DEBUG: RenderSetBlock called for x, j, IsLoopScoped=False
+TRACE: Get: j = 4 (from scope)
+TRACE: Set: x = 4 (current scope)
+TRACE: Get: x = 4 (from scope)
+TRACE: PropagateVariablesToParent start
+TRACE: Propagated x = 4 to parent scope
+After PropagateVariablesToParent Scope[0]: x=1
+After PropagateVariablesToParent Scope[1]: x=4, i=2, loop={ index0 = 1, index = 2, first = False, last = True }
+After PropagateVariablesToParent Scope[2]: x=4, j=4, loop={ index0 = 1, index = 2, first = False, last = True }
+TRACE: PopScope
+TRACE: PropagateVariablesToParent start
+TRACE: Propagated x = 4 to parent scope
+After PropagateVariablesToParent Scope[0]: x=4
+After PropagateVariablesToParent Scope[1]: x=4, i=2, loop={ index0 = 1, index = 2, first = False, last = True }
+TRACE: PopScope
+TRACE: Get: x = 4 (from scope)
+----
+*error running*
+After Parse: Number:1 at Jinja2.NET.Models.SourceLocation
+After Parse: BlockEnd:%} at Jinja2.NET.Models.SourceLocation
+After Parse: BlockEnd:%} at Jinja2.NET.Models.SourceLocation
+After Parse: Identifier:j at Jinja2.NET.Models.SourceLocation
+After Parse: VariableEnd:}} at Jinja2.NET.Models.SourceLocation
+After Parse: VariableEnd:}} at Jinja2.NET.Models.SourceLocation
+DEBUG: RenderSetBlock called for x, IsLoopScoped=False
+TRACE: Set: x = 1 (current scope)
+TRACE: PushScope
+After PushScope Scope[0]: x=1
+After PushScope Scope[1]: 
+TRACE: Set: i = 1 (current scope)
+TRACE: Set: loop = { index0 = 0, index = 1, first = True, last = False } (current scope)
+TRACE: PushScope
+After PushScope Scope[0]: x=1
+After PushScope Scope[1]: i=1, loop={ index0 = 0, index = 1, first = True, last = False }
+After PushScope Scope[2]: 
+TRACE: Set: j = 3 (current scope)
+TRACE: Set: loop = { index0 = 0, index = 1, first = True, last = False } (current scope)
+DEBUG: RenderSetBlock called for x, j, IsLoopScoped=False
+TRACE: Get: j = 3 (from scope)
+TRACE: Set: x = 3 (current scope)
+TRACE: Get: x = 3 (from scope)
+TRACE: PopScope
+TRACE: PushScope
+After PushScope Scope[0]: x=1
+After PushScope Scope[1]: i=1, loop={ index0 = 0, index = 1, first = True, last = False }
+After PushScope Scope[2]: 
+TRACE: Set: j = 4 (current scope)
+TRACE: Set: loop = { index0 = 1, index = 2, first = False, last = True } (current scope)
+DEBUG: RenderSetBlock called for x, j, IsLoopScoped=False
+TRACE: Get: j = 4 (from scope)
+TRACE: Set: x = 4 (current scope)
+TRACE: Get: x = 4 (from scope)
+TRACE: PopScope
+TRACE: PopScope
+TRACE: PushScope
+After PushScope Scope[0]: x=1
+After PushScope Scope[1]: 
+TRACE: Set: i = 2 (current scope)
+TRACE: Set: loop = { index0 = 1, index = 2, first = False, last = True } (current scope)
+TRACE: PushScope
+After PushScope Scope[0]: x=1
+After PushScope Scope[1]: i=2, loop={ index0 = 1, index = 2, first = False, last = True }
+After PushScope Scope[2]: 
+TRACE: Set: j = 3 (current scope)
+TRACE: Set: loop = { index0 = 0, index = 1, first = True, last = False } (current scope)
+DEBUG: RenderSetBlock called for x, j, IsLoopScoped=False
+TRACE: Get: j = 3 (from scope)
+TRACE: Set: x = 3 (current scope)
+TRACE: Get: x = 3 (from scope)
+TRACE: PopScope
+TRACE: PushScope
+After PushScope Scope[0]: x=1
+After PushScope Scope[1]: i=2, loop={ index0 = 1, index = 2, first = False, last = True }
+After PushScope Scope[2]: 
+TRACE: Set: j = 4 (current scope)
+TRACE: Set: loop = { index0 = 1, index = 2, first = False, last = True } (current scope)
+DEBUG: RenderSetBlock called for x, j, IsLoopScoped=False
+TRACE: Get: j = 4 (from scope)
+TRACE: Set: x = 4 (current scope)
+TRACE: Get: x = 4 (from scope)
+TRACE: PopScope
+TRACE: PopScope
+TRACE: Get: x = 1 (from scope)
+
+----
+     Set_Reassignment_Inside_For_Affects_Inner_Usage Success
+Debug: Start ParseListLiteral, token: Number [1]
+Debug: Parsed number 1, next token: Comma [,]
+Debug: Consumed comma, next token: Number [2]
+Debug: Parsed number 2, next token: RightBracket []]
+Debug: End ParseListLiteral, elements: 2
+---Additional info----
+Tokens:
+Token: BlockStart [{%]
+Token: Identifier [set]
+Token: Identifier [x]
+Token: Equals [=]
+Token: Number [1]
+Token: BlockEnd [%}]
+Token: BlockStart [{%]
+Token: Identifier [for]
+Token: Identifier [i]
+Token: Identifier [in]
+Token: LeftBracket [[]
+Token: Number [1]
+Token: Comma [,]
+Token: Number [2]
+Token: RightBracket []]
+Token: BlockEnd [%}]
+Token: BlockStart [{%]
+Token: Identifier [set]
+Token: Identifier [x]
+Token: Equals [=]
+Token: Identifier [i]
+Token: BlockEnd [%}]
+Token: VariableStart [{{]
+Token: Identifier [x]
+Token: VariableEnd [}}]
+Token: BlockStart [{%]
+Token: Identifier [endfor]
+Token: BlockEnd [%}]
+Token: VariableStart [{{]
+Token: Identifier [x]
+Token: VariableEnd [}}]
+Token: EOF []
+
+AST:
+TemplateNode
+  BlockNode: set
+    Arguments:
+      - IdentifierNode: "x"
+      - LiteralNode: 1
+    End Arguments--------
+  BlockNode: for
+    Arguments:
+      - IdentifierNode: "i"
+      - IdentifierNode: "in"
+      -       ListLiteralNode
+        LiteralNode: 1
+        LiteralNode: 2
+    End Arguments--------
+    BlockNode: set
+      Arguments:
+        - IdentifierNode: "x"
+        - IdentifierNode: "i"
+      End Arguments--------
+    VariableNode:
+      IdentifierNode: x
+  VariableNode:
+    IdentifierNode: x
+
+Set: x = 1
+PushScope
+Debug: Setting loop variable i = 1
+Set: i = 1
+Set: loop = { index0 = 0, index = 1, first = True, last = False }
+Get: i = 1
+Set: x = 1
+Get: x = 1
+PopScope
+PushScope
+Debug: Setting loop variable i = 2
+Set: i = 2
+Set: loop = { index0 = 1, index = 2, first = False, last = True }
+Get: i = 2
+Set: x = 2
+Get: x = 2
+PopScope
+Get: x = 1
+Rendered Output: 121
+----
+After Parse: Number:1 at Jinja2.NET.Models.SourceLocation
+After Parse: BlockEnd:%} at Jinja2.NET.Models.SourceLocation
+After Parse: Identifier:i at Jinja2.NET.Models.SourceLocation
+After Parse: VariableEnd:}} at Jinja2.NET.Models.SourceLocation
+After Parse: VariableEnd:}} at Jinja2.NET.Models.SourceLocation
+DEBUG: RenderSetBlock called for x, IsLoopScoped=False
+TRACE: Set: x = 1 (current scope)
+TRACE: PushScope
+After PushScope Scope[0]: x=1
+After PushScope Scope[1]: 
+TRACE: Set: i = 1 (current scope)
+TRACE: Set: loop = { index0 = 0, index = 1, first = True, last = False } (current scope)
+DEBUG: RenderSetBlock called for x, i, IsLoopScoped=False
+TRACE: Get: i = 1 (from scope)
+TRACE: Set: x = 1 (current scope)
+TRACE: Get: x = 1 (from scope)
+TRACE: PopScope
+TRACE: PushScope
+After PushScope Scope[0]: x=1
+After PushScope Scope[1]: 
+TRACE: Set: i = 2 (current scope)
+TRACE: Set: loop = { index0 = 1, index = 2, first = False, last = True } (current scope)
+DEBUG: RenderSetBlock called for x, i, IsLoopScoped=False
+TRACE: Get: i = 2 (from scope)
+TRACE: Set: x = 2 (current scope)
+TRACE: Get: x = 2 (from scope)
+TRACE: PopScope
+TRACE: Get: x = 1 (from scope)
