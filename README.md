@@ -25,7 +25,15 @@ While existing .NET templating libraries like [Scriban](https://github.com/scrib
 *  No Python dependency: Written in native C# (WIP)
 *  Spaces, tabs, and newlines outside `{{ ... }}` and `{% ... %}` are preserved by default, matching Jinja2.
 *  Jinja2-style whitespace control (`{%- ... -%}` and `{{- ... -}}`) trims whitespace only outside the tag, not inside.
+---
 
+## Installation
+
+You can install via NuGet (coming soon):
+
+```bash
+dotnet add package Jinja2.NET
+```
 ---
 
 ## Basic Syntax Overview
@@ -362,15 +370,7 @@ Jinja2.NET is under active development with a focus on correctness, extensibilit
 
 Advanced features such as macros, includes, blocks and template inheritance are planned for the future. They will be implemented if you are interested.
 
----
 
-## Installation
-
-You can install via NuGet (coming soon):
-
-```bash
-dotnet add package Jinja2.NET
-```
 
 ---
 
