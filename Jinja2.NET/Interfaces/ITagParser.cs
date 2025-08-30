@@ -5,5 +5,5 @@ namespace Jinja2.NET.Interfaces;
 
 public interface ITagParser
 {
-  ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser, IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType);
+  ASTNode? Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser, IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType);
 }

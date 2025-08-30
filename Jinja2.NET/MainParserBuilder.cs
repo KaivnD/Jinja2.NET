@@ -15,22 +15,22 @@ public class MainParserBuilder
     // Existing methods with potential enhancements
     public MainParserBuilder ClearTags()
     {
-        _parser.TagRegistry.ClearParsers();
+        _parser.TagRegistry?.ClearParsers();
         return this;
     }
 
     // Method to check what parsers are currently registered
-    public IEnumerable<string> GetRegisteredTags()
+    public IEnumerable<string>? GetRegisteredTags()
     {
         // This assumes TagParserRegistry has a method to list registered tags
         // You might need to implement this in TagParserRegistry
-        return _parser.TagRegistry.GetRegisteredTagNames();
+        return _parser.TagRegistry?.GetRegisteredTagNames();
     }
 
     public MainParserBuilder RegisterTag<T>(string tagName, Func<T> parserFactory) where T : ITagParser
     {
         var parser = parserFactory();
-        _parser.TagRegistry.RegisterParser(tagName, parser);
+        _parser.TagRegistry?.RegisterParser(tagName, parser);
         return this;
     }
 
@@ -59,14 +59,18 @@ public class MainParserBuilder
     public MainParserBuilder ReplaceParser<T>(string tagName, Func<T> parserFactory) where T : ITagParser
     {
         // Remove existing parser if it exists
-        if (_parser.TagRegistry.HasParser(tagName))
+        if (_parser.TagRegistry != null && _parser.TagRegistry.HasParser(tagName))
         {
             _parser.TagRegistry.UnregisterParser(tagName);
         }
 
         // Register the new parser
         var parser = parserFactory();
-        _parser.TagRegistry.RegisterParser(tagName, parser);
+        if (_parser.TagRegistry != null)
+        {
+            _parser.TagRegistry.RegisterParser(tagName, parser);
+        }
+
         return this;
     }
 
@@ -107,10 +111,10 @@ public class MainParserBuilder
         }
 
         // Always replace - unregister first, then register
-        _parser.TagRegistry.UnregisterParser(tagName); // Should handle non-existent gracefully
+        _parser.TagRegistry?.UnregisterParser(tagName); // Should handle non-existent gracefully
 
         var parser = parserFactory();
-        _parser.TagRegistry.RegisterParser(tagName, parser);
+        _parser.TagRegistry?.RegisterParser(tagName, parser);
         return this;
     }
 
@@ -138,7 +142,7 @@ public class MainParserBuilder
 
     public MainParserBuilder UnregisterTag(string tagName)
     {
-        if (_parser.TagRegistry.HasParser(tagName))
+        if (_parser.TagRegistry != null && _parser.TagRegistry.HasParser(tagName))
         {
             _parser.TagRegistry.UnregisterParser(tagName);
         }

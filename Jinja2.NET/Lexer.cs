@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
+
 using Jinja2.NET.Interfaces;
 
 namespace Jinja2.NET;
@@ -6,9 +8,13 @@ namespace Jinja2.NET;
 public class Lexer : ILexer
 {
     private readonly LexerConfig _config;
+
     private readonly string _source;
+
     private readonly Regex _tokenRegex;
+
     private int _column = 1;
+
     private int _line = 1;
 
     public Lexer(string source, LexerConfig? config = null)
@@ -26,7 +32,10 @@ public class Lexer : ILexer
         var tokens = new List<Token>();
         var position = 0;
 
-        while (position < _source.Length) position = ProcessNextSection(tokens, position);
+        while (position < _source.Length)
+        {
+            position = ProcessNextSection(tokens, position);
+        }
 
         tokens.Add(CreateToken(ETokenType.EOF, ""));
         return tokens;
@@ -47,24 +56,28 @@ public class Lexer : ILexer
         return errors;
     }
 
-    private void AddDelimiterToken(List<Token> tokens, string delimiter)
+    private void AddDelimiterToken(List<Token> tokens, string? delimiter)
     {
-        var cleanDelimiter = delimiter.Replace("-", "");
+        var cleanDelimiter = delimiter?.Replace("-", "");
         var tokenType = GetDelimiterTokenType(cleanDelimiter);
 
         // Capture position before creating token
         var tokenLine = _line;
         var tokenColumn = _column;
 
-        var token = new Token(
-            tokenType,
-            delimiter,
-            tokenLine,
-            tokenColumn,
-            delimiter.EndsWith("-"),
-            delimiter.StartsWith("-")
-        );
-        tokens.Add(token);
+        if (delimiter != null)
+        {
+            var token = new Token(
+                tokenType,
+                delimiter,
+                tokenLine,
+                tokenColumn,
+                delimiter.EndsWith("-"),
+                delimiter.StartsWith("-")
+            );
+            tokens.Add(token);
+        }
+
         UpdatePosition(delimiter);
     }
 
@@ -100,7 +113,10 @@ public class Lexer : ILexer
 
             // Find the position after any leading newlines
             var leadingNewlines = 0;
-            for (var i = 0; i < text.Length && text[i] == '\n'; i++) leadingNewlines++;
+            for (var i = 0; i < text.Length && text[i] == '\n'; i++)
+            {
+                leadingNewlines++;
+            }
 
             if (leadingNewlines > 0)
             {
@@ -139,7 +155,10 @@ public class Lexer : ILexer
 
                 // Find the position after any leading newlines in processed text
                 var leadingNewlines = 0;
-                for (var i = 0; i < processedText.Length && processedText[i] == '\n'; i++) leadingNewlines++;
+                for (var i = 0; i < processedText.Length && processedText[i] == '\n'; i++)
+                {
+                    leadingNewlines++;
+                }
 
                 if (leadingNewlines > 0)
                 {
@@ -166,7 +185,10 @@ public class Lexer : ILexer
 
                 // Find the position after any leading newlines
                 var leadingNewlines = 0;
-                for (var i = 0; i < text.Length && text[i] == '\n'; i++) leadingNewlines++;
+                for (var i = 0; i < text.Length && text[i] == '\n'; i++)
+                {
+                    leadingNewlines++;
+                }
 
                 if (leadingNewlines > 0)
                 {
@@ -238,16 +260,19 @@ public class Lexer : ILexer
         return GetOperatorTokenType(match.Value);
     }
 
-    private string FindMatchingEndDelimiter(int startPosition, string startDelimiter, out bool trimRight)
+    private string FindMatchingEndDelimiter(
+        int startPosition,
+        string startDelimiter,
+        out bool trimRight)
     {
         trimRight = false;
 
         var candidateDelimiters = _config.EndDelimiters.ContainsKey(startDelimiter)
-            ? _config.EndDelimiters[startDelimiter]
-            : Array.Empty<string>();
+                                      ? _config.EndDelimiters[startDelimiter]
+                                      : Array.Empty<string>();
 
         var nearestPosition = -1;
-        string nearestDelimiter = null;
+        string? nearestDelimiter = null;
 
         foreach (var endDelimiter in candidateDelimiters)
         {
@@ -268,7 +293,7 @@ public class Lexer : ILexer
         throw CreateUnclosedTagException(startPosition);
     }
 
-    private int FindNextDelimiter(int startPosition, out string delimiter)
+    private int FindNextDelimiter(int startPosition, out string? delimiter)
     {
         var minIndex = -1;
         delimiter = null;
@@ -286,44 +311,53 @@ public class Lexer : ILexer
         return minIndex;
     }
 
-    private ETokenType GetDelimiterTokenType(string delimiter)
+    private ETokenType GetDelimiterTokenType(string? delimiter)
     {
-        var cleanDelimiter = delimiter.Replace("-", "");
-        return cleanDelimiter switch
+        if (delimiter != null)
         {
-            "{{" => ETokenType.VariableStart,
-            "}}" => ETokenType.VariableEnd,
-            "{%" => ETokenType.BlockStart,
-            "%}" => ETokenType.BlockEnd,
-            "{#" => ETokenType.CommentStart,
-            "#}" => ETokenType.CommentEnd,
-            _ => throw new ArgumentException($"Unknown delimiter: {delimiter}")
-        };
+            var cleanDelimiter = delimiter.Replace("-", "");
+            return cleanDelimiter switch
+                {
+                    "{{" => ETokenType.VariableStart,
+                    "}}" => ETokenType.VariableEnd,
+                    "{%" => ETokenType.BlockStart,
+                    "%}" => ETokenType.BlockEnd,
+                    "{#" => ETokenType.CommentStart,
+                    "#}" => ETokenType.CommentEnd,
+                    _ => throw new ArgumentException($"Unknown delimiter: {delimiter}")
+                };
+        }
+
+        return ETokenType.None;
     }
 
     private static ETokenType GetOperatorTokenType(string value)
     {
         return value switch
-        {
-            "|" => ETokenType.Pipe,
-            "." => ETokenType.Dot,
-            "(" => ETokenType.LeftParen,
-            ")" => ETokenType.RightParen,
-            "[" => ETokenType.LeftBracket,
-            "]" => ETokenType.RightBracket,
-            "," => ETokenType.Comma,
-            ":" => ETokenType.Colon,
-            "=" => ETokenType.Equals,
-            "+" => ETokenType.Plus,
-            "-" => ETokenType.Minus,
-            "*" => ETokenType.Multiply,
-            "/" => ETokenType.Divide,
-            _ => ETokenType.Operator
-        };
+            {
+                "|" => ETokenType.Pipe,
+                "." => ETokenType.Dot,
+                "(" => ETokenType.LeftParen,
+                ")" => ETokenType.RightParen,
+                "[" => ETokenType.LeftBracket,
+                "]" => ETokenType.RightBracket,
+                "," => ETokenType.Comma,
+                ":" => ETokenType.Colon,
+                "=" => ETokenType.Equals,
+                "+" => ETokenType.Plus,
+                "-" => ETokenType.Minus,
+                "*" => ETokenType.Multiply,
+                "/" => ETokenType.Divide,
+                _ => ETokenType.Operator
+            };
     }
 
-    private int HandlePostDelimiterWhitespace(List<Token> tokens, int position, string startDelimiter,
-        string endDelimiter, bool trimRight)
+    private int HandlePostDelimiterWhitespace(
+        List<Token> tokens,
+        int position,
+        string startDelimiter,
+        string endDelimiter,
+        bool trimRight)
     {
         if (_config.LstripBlocks && IsBlockDelimiter(startDelimiter))
         {
@@ -352,6 +386,7 @@ public class Lexer : ILexer
             var remainingText = _source.AsSpan(position).ToString();
             var trimmedLength = 0;
             for (var i = 0; i < remainingText.Length; i++)
+            {
                 if (remainingText[i] == ' ' || remainingText[i] == '\t')
                 {
                     trimmedLength++;
@@ -360,6 +395,7 @@ public class Lexer : ILexer
                 {
                     break;
                 }
+            }
 
             if (trimmedLength > 0)
             {
@@ -372,10 +408,15 @@ public class Lexer : ILexer
         return position;
     }
 
-    private bool IsBlockDelimiter(string delimiter)
+    private bool IsBlockDelimiter(string? delimiter)
     {
-        var cleanDelimiter = delimiter.Replace("-", "");
-        return cleanDelimiter == "{%";
+        if (delimiter != null)
+        {
+            var cleanDelimiter = delimiter.Replace("-", "");
+            return cleanDelimiter == "{%";
+        }
+
+        return false;
     }
 
     private static bool IsKnownDelimiter(string value)
@@ -384,7 +425,11 @@ public class Lexer : ILexer
                value == "%}" || value == "{#" || value == "#}";
     }
 
-    private bool IsRawBlockStart(int delimiterPos, string startDelimiter, out int rawBlockStart, out int rawBlockEnd)
+    private bool IsRawBlockStart(
+        int delimiterPos,
+        string? startDelimiter,
+        out int rawBlockStart,
+        out int rawBlockEnd)
     {
         rawBlockStart = -1;
         rawBlockEnd = -1;
@@ -403,7 +448,10 @@ public class Lexer : ILexer
         }
 
         // Find the end of the block tag
-        var blockEndPos = _source.IndexOf("%}", afterStart + match.Length, StringComparison.Ordinal);
+        var blockEndPos = _source.IndexOf(
+            "%}",
+            afterStart + match.Length,
+            StringComparison.Ordinal);
         if (blockEndPos == -1)
         {
             return false;
@@ -442,40 +490,56 @@ public class Lexer : ILexer
         }
     }
 
-    private int ProcessDelimiterAndContent(List<Token> tokens, int delimiterPos, string startDelimiter)
+    private int ProcessDelimiterAndContent(
+        List<Token> tokens,
+        int delimiterPos,
+        string? startDelimiter)
     {
         // Add start delimiter token
-        AddDelimiterToken(tokens, startDelimiter);
-        var position = delimiterPos + startDelimiter.Length;
-
-        // Find and process content between delimiters
-        var endDelimiter = FindMatchingEndDelimiter(position, startDelimiter, out var trimRight);
-        var endDelimiterPos = _source.IndexOf(endDelimiter, position, StringComparison.Ordinal);
-
-        if (endDelimiterPos == -1)
+        if (startDelimiter != null)
         {
-            throw CreateUnclosedTagException(position);
+            AddDelimiterToken(tokens, startDelimiter);
+            var position = delimiterPos + startDelimiter.Length;
+
+            // Find and process content between delimiters
+            var endDelimiter = FindMatchingEndDelimiter(
+                position,
+                startDelimiter,
+                out var trimRight);
+            var endDelimiterPos = _source.IndexOf(endDelimiter, position, StringComparison.Ordinal);
+
+            if (endDelimiterPos == -1)
+            {
+                throw CreateUnclosedTagException(position);
+            }
+
+            // Handle block content
+            var content = _source.Substring(position, endDelimiterPos - position);
+            if (IsBlockDelimiter(startDelimiter))
+            {
+                ProcessBlockContent(tokens, position, endDelimiterPos, content);
+            }
+            else
+            {
+                ProcessExpressionTokens(tokens, position, endDelimiterPos);
+            }
+
+            // Add end delimiter token
+            AddEndDelimiterToken(tokens, endDelimiter, trimRight);
+
+            // Move position past the end delimiter
+            var newPosition = endDelimiterPos + endDelimiter.Length;
+
+            // Handle whitespace after block tags
+            return HandlePostDelimiterWhitespace(
+                tokens,
+                newPosition,
+                startDelimiter,
+                endDelimiter,
+                trimRight);
         }
 
-        // Handle block content
-        var content = _source.Substring(position, endDelimiterPos - position);
-        if (IsBlockDelimiter(startDelimiter))
-        {
-            ProcessBlockContent(tokens, position, endDelimiterPos, content);
-        }
-        else
-        {
-            ProcessExpressionTokens(tokens, position, endDelimiterPos);
-        }
-
-        // Add end delimiter token
-        AddEndDelimiterToken(tokens, endDelimiter, trimRight);
-
-        // Move position past the end delimiter
-        var newPosition = endDelimiterPos + endDelimiter.Length;
-
-        // Handle whitespace after block tags
-        return HandlePostDelimiterWhitespace(tokens, newPosition, startDelimiter, endDelimiter, trimRight);
+        return -1;
     }
 
     private void ProcessExpressionTokens(List<Token> tokens, int startPos, int endPos)
@@ -538,22 +602,36 @@ public class Lexer : ILexer
         }
 
         // Check for raw block
-        if (IsRawBlockStart(nextDelimiterPos, startDelimiter, out var rawBlockStart, out var rawBlockEnd))
+        if (IsRawBlockStart(
+                nextDelimiterPos,
+                startDelimiter,
+                out var rawBlockStart,
+                out var rawBlockEnd))
         {
-            return ProcessRawBlock(tokens, nextDelimiterPos, startDelimiter, rawBlockStart, rawBlockEnd);
+            return ProcessRawBlock(
+                tokens,
+                nextDelimiterPos,
+                startDelimiter,
+                rawBlockStart,
+                rawBlockEnd);
         }
 
         // Process the delimiter and its content
         return ProcessDelimiterAndContent(tokens, nextDelimiterPos, startDelimiter);
     }
 
-    private int ProcessRawBlock(List<Token> tokens, int delimiterPos, string startDelimiter, int rawBlockStart,
+    private int ProcessRawBlock(
+        List<Token> tokens,
+        int delimiterPos,
+        string? startDelimiter,
+        int rawBlockStart,
         int rawBlockEnd)
     {
         // Add start delimiter token
         AddDelimiterToken(tokens, startDelimiter);
 
         // Add 'raw' identifier token
+        Debug.Assert(startDelimiter != null, nameof(startDelimiter) + " != null");
         var afterStart = delimiterPos + startDelimiter.Length;
         var match = Regex.Match(_source.Substring(afterStart), @"^\s*raw\b");
         if (match.Success)
@@ -565,7 +643,10 @@ public class Lexer : ILexer
         }
 
         // Find the end of the block tag
-        var blockEndPos = _source.IndexOf("%}", afterStart + match.Length, StringComparison.Ordinal);
+        var blockEndPos = _source.IndexOf(
+            "%}",
+            afterStart + match.Length,
+            StringComparison.Ordinal);
         var blockEndDelimiter = _source.Substring(blockEndPos, 2);
         AddEndDelimiterToken(tokens, blockEndDelimiter, false);
 
@@ -577,12 +658,16 @@ public class Lexer : ILexer
         var endRawRegex = new Regex(@"\{%-?\s*endraw\s*-?%\}", RegexOptions.Compiled);
         var endRawMatch = endRawRegex.Match(_source, rawBlockEnd);
         var endRawStart = endRawMatch.Index;
-        var endRawStartDelimiter = _source.Substring(endRawStart, _source[endRawStart + 2] == '-' ? 3 : 2);
+        var endRawStartDelimiter = _source.Substring(
+            endRawStart,
+            _source[endRawStart + 2] == '-' ? 3 : 2);
         AddDelimiterToken(tokens, endRawStartDelimiter);
 
         // Add 'endraw' identifier token
         var endrawIdentMatch =
-            Regex.Match(_source.Substring(endRawStart + endRawStartDelimiter.Length), @"^\s*endraw\b");
+            Regex.Match(
+                _source.Substring(endRawStart + endRawStartDelimiter.Length),
+                @"^\s*endraw\b");
         if (endrawIdentMatch.Success)
         {
             var tokenLine = _line;
@@ -620,27 +705,34 @@ public class Lexer : ILexer
         }
     }
 
-    private void ProcessTextBeforeDelimiter(List<Token> tokens, int startPos, int endPos, string startDelimiter)
+    private void ProcessTextBeforeDelimiter(
+        List<Token> tokens,
+        int startPos,
+        int endPos,
+        string? startDelimiter)
     {
         var textBeforeDelimiter = _source.AsSpan(startPos, endPos - startPos).ToString();
-        var isBlockTag = IsBlockDelimiter(startDelimiter);
+        var isBlockTag = startDelimiter != null && IsBlockDelimiter(startDelimiter);
         // Apply LstripBlocks for any block tag when enabled, or for hyphenated block tags
-        var shouldLstrip = isBlockTag && (_config.LstripBlocks || startDelimiter.StartsWith("-"));
+        var shouldLstrip = isBlockTag && startDelimiter != null && (_config.LstripBlocks || startDelimiter.StartsWith("-"));
         AddTextTokenWithLstrip(tokens, textBeforeDelimiter, shouldLstrip);
     }
 
-    private void UpdatePosition(string value)
+    private void UpdatePosition(string? value)
     {
-        foreach (var character in value)
+        if (value != null)
         {
-            if (character == '\n')
+            foreach (var character in value)
             {
-                _line++;
-                _column = 1; // Reset column to 1 for the new line
-            }
-            else
-            {
-                _column++;
+                if (character == '\n')
+                {
+                    _line++;
+                    _column = 1; // Reset column to 1 for the new line
+                }
+                else
+                {
+                    _column++;
+                }
             }
         }
     }

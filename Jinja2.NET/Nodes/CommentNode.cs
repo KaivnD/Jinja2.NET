@@ -16,7 +16,7 @@ public class CommentNode : ASTNode, IVisitable
         TrimRight = trimRight;
     }
 
-    public override object Accept(INodeVisitor visitor)
+    public override object? Accept(INodeVisitor visitor)
     {
         return null;
         // Comments are not rendered

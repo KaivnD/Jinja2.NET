@@ -13,8 +13,8 @@ public class EndTagParser : BaseTagParser
         _tagName = tagName?.ToLower() ?? throw new ArgumentNullException(nameof(tagName));
     }
 
-    public override ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry,
-        IExpressionParser expressionParser, IBlockBodyParser blockBodyParser,
+    public override ASTNode? Parse(TokenIterator tokens, ITagParserRegistry? tagRegistry,
+        IExpressionParser? expressionParser, IBlockBodyParser? blockBodyParser,
         SourceLocation tagStartLocation, ETokenType tagStartTokenType)
     {
         SkipWhitespace(tokens);

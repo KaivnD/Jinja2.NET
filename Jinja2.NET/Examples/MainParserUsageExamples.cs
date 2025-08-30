@@ -18,7 +18,7 @@ public static class MainParserUsageExamples
     public class CachedIncludeParser : ITagParser
     {
         /* Your implementation */
-        public ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
+        public ASTNode? Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
             IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType)
         {
             return null;
@@ -37,7 +37,7 @@ public static class MainParserUsageExamples
     public class FastConditionalParser : ITagParser
     {
         /* Your implementation */
-        public ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
+        public ASTNode? Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
             IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType)
         {
             return null;
@@ -46,7 +46,7 @@ public static class MainParserUsageExamples
 
     public class IncludeTagParser : ITagParser
     {
-        public ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
+        public ASTNode? Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
             IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType)
         {
             return null;
@@ -67,7 +67,7 @@ public static class MainParserUsageExamples
     public class MyCustomConditionalParser : ITagParser
     {
         /* Your implementation */
-        public ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
+        public ASTNode? Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
             IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType)
         {
             return null;
@@ -89,7 +89,7 @@ public static class MainParserUsageExamples
     public class MyCustomLoopParser : ITagParser
     {
         /* Your implementation */
-        public ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
+        public ASTNode? Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
             IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType)
         {
             return null;
@@ -99,7 +99,7 @@ public static class MainParserUsageExamples
     public class MyCustomRawParser : ITagParser
     {
         /* Your implementation */
-        public ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
+        public ASTNode? Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
             IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType)
         {
             return null;
@@ -108,18 +108,17 @@ public static class MainParserUsageExamples
 
     public class MyCustomStatementParser : StatementParser
     {
-        public MyCustomStatementParser(ExpressionParser expressionParser,
-            TagParserRegistry tagRegistry, LexerConfig config)
+        public MyCustomStatementParser(ExpressionParser? expressionParser,
+            TagParserRegistry? tagRegistry, LexerConfig config)
             : base(expressionParser, tagRegistry, config)
         {
-            /* Your implementation */
         }
     }
 
     public class OptimizedConditionalParser : ITagParser
     {
         /* Your implementation */
-        public ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
+        public ASTNode? Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
             IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType)
         {
             return null;
@@ -134,7 +133,7 @@ public static class MainParserUsageExamples
     public class ParallelLoopParser : ITagParser
     {
         /* Your implementation */
-        public ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
+        public ASTNode? Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
             IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType)
         {
             return null;
@@ -239,9 +238,9 @@ public static class MainParserUsageExamples
         else
         {
             // Error occurred, but tokens are still available
-            var tokens = error.Tokens;
-            var stage = error.Stage;
-            Console.WriteLine($"Error at {stage}: {error.Message}");
+            var tokens = error?.Tokens;
+            var stage = error?.Stage;
+            Console.WriteLine($"Error at {stage}: {error?.Message}");
         }
     }
 

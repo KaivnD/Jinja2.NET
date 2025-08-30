@@ -11,7 +11,7 @@ public class VariableContext
         _variables = new Dictionary<string, object>();
     }
 
-    public virtual object GetValue(string name)
+    public virtual object? GetValue(string name)
     {
         var found = _variables.TryGetValue(name, out var value);
         Trace.WriteLine($"TRACE: GetValue: {name} = {(found ? value : "null")} (from VariableContext)");

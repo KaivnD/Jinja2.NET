@@ -11,7 +11,7 @@ public class LoggingTemplateContext : TemplateContext
         _output = output;
     }
 
-    public override object Get(string name)
+    public override object? Get(string name)
     {
         var value = base.Get(name);
         _output.WriteLine($"Get: {name} = {(value == null ? "null" : value.ToString())}");
@@ -30,24 +30,27 @@ public class LoggingTemplateContext : TemplateContext
         base.PushScope();
     }
 
-    public override void Set(string name, object value)
+    public override void Set(string name, object? value)
     {
-        if (name == "i" && value != null)
+        if (value != null && name == "i")
         {
             _output.WriteLine($"Debug: Setting loop variable i = {value}");
         }
 
         _output.WriteLine($"Set: {name} = {(value == null ? "null" : value.ToString())}");
-        base.Set(name, value);
+        if (value != null)
+        {
+            base.Set(name, value);
+        }
     }
 
-    public override void SetAll(object obj)
+    public override void SetAll(object? obj)
     {
         _output.WriteLine($"SetAll: {(obj == null ? "null" : obj.ToString())}");
         base.SetAll(obj);
     }
 
-    public override void SetVariableInGlobalScope(string name, object value)
+    public override void SetVariableInGlobalScope(string name, object? value)
     {
         _output.WriteLine($"SetInRootScope: {name} = {(value == null ? "null" : value.ToString())}");
         base.SetVariableInGlobalScope(name, value);

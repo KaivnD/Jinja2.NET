@@ -9,7 +9,7 @@ public class StandardLoopProcessor : LoopProcessor
     public override string Process(IRenderer renderer, BlockNode node, List<string> loopVarNames, List<object> items,
         HashSet<string> setVariables)
     {
-        var directSetVariables = GetDirectSetVariables(node);
+        var directSetVariables = GetDirectSetVariablesPrivate(node);
         var result = new StringBuilder();
         renderer.ScopeManager.PushScope(); // Push once for the whole loop
         try
@@ -71,7 +71,7 @@ public class StandardLoopProcessor : LoopProcessor
     {
     }
 
-    private static HashSet<string> GetDirectSetVariables(BlockNode node)
+    private static HashSet<string> GetDirectSetVariablesPrivate(BlockNode node)
     {
         var direct = new HashSet<string>();
         if (node.Children == null)

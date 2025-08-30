@@ -21,7 +21,7 @@ public class TemplateNode : ASTNode, IVisitable
         }
     }
 
-    public override object Accept(INodeVisitor visitor)
+    public override object? Accept(INodeVisitor visitor)
     {
         return visitor.Visit(this);
     }

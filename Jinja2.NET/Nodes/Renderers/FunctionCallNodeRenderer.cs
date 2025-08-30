@@ -205,7 +205,7 @@ public class FunctionCallNodeRenderer : INodeRenderer
         return item is IEnumerable and not string && loopVarNames.Count > 1;
     }
 
-    private static BlockNode TryGetTemplateFromScope(IDictionary<string, object> scope)
+    private static BlockNode? TryGetTemplateFromScope(IDictionary<string, object> scope)
     {
         if (scope.TryGetValue("__recursive_template__", out var templateObj) &&
             templateObj is BlockNode template)

@@ -3,9 +3,9 @@
 public class Environment
 {
     private readonly Dictionary<string, Template> _templateCache = new();
-    private readonly string _templateDirectory;
+    private readonly string? _templateDirectory;
 
-    public Environment(string templateDirectory = null)
+    public Environment(string? templateDirectory = null)
     {
         _templateDirectory = templateDirectory;
     }

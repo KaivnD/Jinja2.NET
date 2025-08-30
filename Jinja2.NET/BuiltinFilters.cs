@@ -22,7 +22,7 @@ public static class BuiltinFilters
     // Other magic values
     private const string EmptyString = "";
 
-    private static readonly Dictionary<string, Func<object, object[], object>> _filters =
+    private static readonly Dictionary<string, Func<object?, object[], object>> _filters =
         new()
         {
             [UpperFilter] = (value, args) => value?.ToString()?.ToUpper(),
@@ -40,7 +40,7 @@ public static class BuiltinFilters
             [LastFilter] = (value, args) => DoLastFilter(value)
         };
 
-    public static object ApplyFilter(string filterName, object value, object[] arguments)
+    public static object ApplyFilter(string filterName, object? value, object[] arguments)
     {
         if (_filters.TryGetValue(filterName, out var filter))
         {

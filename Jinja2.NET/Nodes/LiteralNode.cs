@@ -12,7 +12,7 @@ public class LiteralNode : ExpressionNode, IVisitable
         Value = value;
     }
 
-    public override object Accept(INodeVisitor visitor)
+    public override object? Accept(INodeVisitor visitor)
     {
         return visitor.Visit(this);
     }

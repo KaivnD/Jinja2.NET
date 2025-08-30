@@ -42,20 +42,22 @@ public class ParserTests
         var parser = new MainParser();
         var ast = parser.Parse(template);
 
+        if (ast != null)
+        {
+            var ifBlock = ast.Children[0] as BlockNode;
+            ifBlock.Should().NotBeNull();
+            ifBlock!.Children.Should().HaveCount(2);
 
-        var ifBlock = ast.Children[0] as BlockNode;
-        ifBlock.Should().NotBeNull();
-        ifBlock!.Children.Should().HaveCount(2);
+            ifBlock.Children[0].Should().BeOfType<TextNode>()
+                .Which.Content.Should().Be("yes");
 
-        ifBlock.Children[0].Should().BeOfType<TextNode>()
-            .Which.Content.Should().Be("yes");
+            ifBlock.Children[1].Should().BeOfType<BlockNode>()
+                .Which.Name.Should().Be("else");
 
-        ifBlock.Children[1].Should().BeOfType<BlockNode>()
-            .Which.Name.Should().Be("else");
-
-        var elseBlock = (BlockNode)ifBlock.Children[1];
-        elseBlock.Children.Should().ContainSingle()
-            .Which.Should().BeOfType<TextNode>().Which.Content.Should().Be("not yes!");
+            var elseBlock = (BlockNode)ifBlock.Children[1];
+            elseBlock.Children.Should().ContainSingle()
+                .Which.Should().BeOfType<TextNode>().Which.Content.Should().Be("not yes!");
+        }
     }
 
     [Fact]

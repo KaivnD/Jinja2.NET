@@ -14,7 +14,7 @@ public class Renderer : IRenderer
     public IReadOnlyDictionary<string, Func<object, object[], object>> CustomFilters { get; } // ✅ Add this
     public IScopeManager ScopeManager { get; }
 
-    public Renderer(IVariableContext context, IScopeManager scopeManager = null)
+    public Renderer(IVariableContext context, IScopeManager? scopeManager = null)
         : this(context, scopeManager, new Dictionary<string, Func<object, object[], object>>())
     {
     }
@@ -25,7 +25,7 @@ public class Renderer : IRenderer
     {
     }
 
-    public Renderer(IVariableContext context, IScopeManager scopeManager,
+    public Renderer(IVariableContext context, IScopeManager? scopeManager,
         Dictionary<string, Func<object, object[], object>> customFilters)
     {
         Context = context;
@@ -67,11 +67,14 @@ public class Renderer : IRenderer
         return _output.ToString();
     }
 
-    public object Visit(ASTNode node)
+    public object? Visit(ASTNode node)
     {
         if (_renderers.TryGetValue(node.GetType(), out var renderer))
         {
-            return renderer.Render(node, this);
+            if (renderer != null)
+            {
+                return renderer.Render(node, this);
+            }
         }
 
         throw new NotSupportedException($"No renderer for node type {node.GetType().Name}");

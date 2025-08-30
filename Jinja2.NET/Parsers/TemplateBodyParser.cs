@@ -7,7 +7,7 @@ public class TemplateBodyParser
 {
     private readonly IStatementParser _statementParser;
 
-    public TemplateBodyParser(IStatementParser statementParser)
+    public TemplateBodyParser(IStatementParser? statementParser)
     {
         _statementParser = statementParser ?? throw new ArgumentNullException(nameof(statementParser));
     }
@@ -15,7 +15,7 @@ public class TemplateBodyParser
     public TemplateNode Parse(TokenIterator tokens)
     {
         var template = new TemplateNode();
-        TextNode lastTextNode = null;
+        TextNode? lastTextNode = null;
         var trimNextTextNodeLeading = false;
 
         while (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.EOF)

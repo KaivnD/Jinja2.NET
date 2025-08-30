@@ -16,7 +16,7 @@ public class BinaryExpressionNode : ExpressionNode, IVisitable
         Right = right;
     }
 
-    public override object Accept(INodeVisitor visitor)
+    public override object? Accept(INodeVisitor visitor)
     {
         return visitor.Visit(this);
     }

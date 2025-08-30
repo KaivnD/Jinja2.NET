@@ -30,9 +30,9 @@ public class Template
     // Main constructor with full flexibility
     public Template(string source,
         LexerConfig? config,
-        Func<TemplateContext, IRenderer> rendererFactory = null,
-        MainParser customParser = null,
-        Action<MainParserBuilder> configureParser = null)
+        Func<TemplateContext, IRenderer>? rendererFactory = null,
+        MainParser? customParser = null,
+        Action<MainParserBuilder>? configureParser = null)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
 
@@ -45,12 +45,16 @@ public class Template
 
         // Parse and store results
         var result = _parser.ParseWithTokens(source);
-        _ast = result.Node;
+        if (result.Node != null)
+        {
+            _ast = result.Node;
+        }
+
         _tokens = result.Tokens;
     }
 
     // Convenience constructor for simple cases
-    public Template(string source, LexerConfig config = null)
+    public Template(string source, LexerConfig? config = null)
         : this(source, config, null)
     {
     }
@@ -62,9 +66,9 @@ public class Template
     }
 
     public static Template CreateCustom(string source,
-        LexerConfig config = null,
-        Func<TemplateContext, IRenderer> rendererFactory = null,
-        Action<MainParserBuilder> configureParser = null)
+        LexerConfig? config = null,
+        Func<TemplateContext, IRenderer>? rendererFactory = null,
+        Action<MainParserBuilder>? configureParser = null)
     {
         return new Template(source, config, rendererFactory, null, configureParser);
     }
@@ -137,7 +141,7 @@ public class Template
     }
 
 
-    public string Render(object context = null, bool reuseContext = false)
+    public string Render(object? context = null, bool reuseContext = false)
     {
         TemplateContext templateContext;
         if (reuseContext && context is TemplateContext ctx)
@@ -239,8 +243,8 @@ public class Template
     }
 
     // Safe creation with error handling
-    public static bool TryCreate(string source, out Template template, out TemplateParsingException error,
-        LexerConfig config = null, Action<MainParserBuilder> configureParser = null)
+    public static bool TryCreate(string source, out Template? template, out TemplateParsingException? error,
+        LexerConfig? config = null, Action<MainParserBuilder>? configureParser = null)
     {
         try
         {
@@ -283,5 +287,3 @@ public class Template
         return new Template(_source, _parser.Config, rendererFactory, _parser);
     }
 }
-
-// Usage examples

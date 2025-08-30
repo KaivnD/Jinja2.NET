@@ -10,8 +10,8 @@ public class StatementParser : IStatementParser
     private readonly IExpressionParser _expressionParser;
     private readonly ITagParserRegistry _tagRegistry;
 
-    public StatementParser(IExpressionParser expressionParser, ITagParserRegistry tagRegistry,
-        LexerConfig config = null)
+    public StatementParser(IExpressionParser? expressionParser, ITagParserRegistry? tagRegistry,
+        LexerConfig? config = null)
     {
         _expressionParser = expressionParser ?? throw new ArgumentNullException(nameof(expressionParser));
         _tagRegistry = tagRegistry ?? throw new ArgumentNullException(nameof(tagRegistry));
@@ -20,7 +20,7 @@ public class StatementParser : IStatementParser
 
     public (ASTNode Node, ETokenType ConsumedStartMarkerType) Parse(TokenIterator tokens)
     {
-        return Parse(tokens, Array.Empty<string>());
+        return Parse(tokens, []);
     }
 
 
@@ -73,7 +73,7 @@ public class StatementParser : IStatementParser
         var blockName = blockNameToken.Value.ToLower();
         var parser = _tagRegistry.GetParser(blockName);
 
-        ASTNode node;
+        ASTNode? node;
         if (parser != null)
         {
             node = parser.Parse(tokens, _tagRegistry, _expressionParser, new BlockBodyParser(this), tagStartLocation,

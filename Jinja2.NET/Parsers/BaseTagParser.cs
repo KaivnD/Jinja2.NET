@@ -9,11 +9,11 @@ namespace Jinja2.NET.Parsers;
 /// </summary>
 public abstract class BaseTagParser : ITagParser
 {
-    public abstract ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry,
+    public abstract ASTNode? Parse(TokenIterator tokens, ITagParserRegistry tagRegistry,
         IExpressionParser expressionParser, IBlockBodyParser blockBodyParser,
         SourceLocation tagStartLocation, ETokenType tagStartTokenType);
 
-    protected void ConfigureBlockNode(BlockNode block, ExpressionNode condition, Token blockStartToken, Token endToken)
+    protected void ConfigureBlockNode(BlockNode block, ExpressionNode? condition, Token blockStartToken, Token endToken)
     {
         if (condition != null)
         {

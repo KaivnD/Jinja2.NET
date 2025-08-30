@@ -12,7 +12,7 @@ public class ListLiteralNode : ExpressionNode, IVisitable
         Elements = elements;
     }
 
-    public override object Accept(INodeVisitor visitor)
+    public override object? Accept(INodeVisitor visitor)
     {
         return visitor.Visit(this);
     }

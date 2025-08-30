@@ -25,12 +25,15 @@ public static class TemplateUsageExamples
     {
         if (Template.TryCreate("{% invalid syntax %}", out var template, out var error))
         {
-            var result = template.Render();
+            if (template != null)
+            {
+                var result = template.Render();
+            }
         }
         else
         {
-            Console.WriteLine($"Template creation failed: {error.Message}");
-            Console.WriteLine($"Tokens available: {error.Tokens?.Count ?? 0}");
+            Console.WriteLine($"Template creation failed: {error?.Message}");
+            Console.WriteLine($"Tokens available: {error?.Tokens?.Count ?? 0}");
         }
     }
 
@@ -70,7 +73,7 @@ public static class TemplateUsageExamples
     public class IncludeTagParser:ITagParser
     {
         // Implementation for include tag
-        public ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
+        public ASTNode? Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
             IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType)
         {
             return null;
@@ -81,7 +84,7 @@ public static class TemplateUsageExamples
     public class MyCustomTagParser : ITagParser
     {
         // Implementation depends on your tag parser interface
-        public ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
+        public ASTNode? Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
             IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType)
         {
             return null;

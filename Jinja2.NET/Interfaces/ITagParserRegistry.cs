@@ -2,5 +2,5 @@
 
 public interface ITagParserRegistry
 {
-  ITagParser GetParser(string tagName);
+  ITagParser? GetParser(string tagName);
 }

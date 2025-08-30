@@ -14,7 +14,7 @@ public class IndexNode : ExpressionNode, IVisitable
         Index = index;
     }
 
-    public override object Accept(INodeVisitor visitor)
+    public override object? Accept(INodeVisitor visitor)
     {
         return visitor.Visit(this);
     }

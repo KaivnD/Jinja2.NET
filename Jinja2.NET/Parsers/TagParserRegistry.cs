@@ -11,7 +11,7 @@ public class TagParserRegistry : ITagParserRegistry
         _parsers.Clear();
     }
 
-    public ITagParser GetParser(string tagName)
+    public ITagParser? GetParser(string tagName)
     {
         _parsers.TryGetValue(tagName.ToLower(), out var parser);
         return parser;

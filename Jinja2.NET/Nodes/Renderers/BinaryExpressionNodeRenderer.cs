@@ -23,8 +23,8 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
             "/" => Divide(left, right),
             "//" => FloorDivide(left, right),
             "%" => Modulo(left, right),
-            "==" => Equals(left, right),
-            "!=" => !Equals(left, right),
+            "==" => EqualsPrivate(left, right),
+            "!=" => !EqualsPrivate(left, right),
             "<" => Compare(left, right) < 0,
             ">" => Compare(left, right) > 0,
             "<=" => Compare(left, right) <= 0,
@@ -35,7 +35,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         };
     }
 
-    private static object Add(object left, object right)
+    private static object? Add(object? left, object? right)
     {
         if (left == null || right == null)
         {
@@ -60,7 +60,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         throw new InvalidOperationException($"Cannot add {left.GetType()} and {right.GetType()}");
     }
 
-    private static int Compare(object left, object right)
+    private static int Compare(object? left, object? right)
     {
         if (left == null && right == null)
         {
@@ -106,7 +106,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         return result;
     }
 
-    private static object Divide(object left, object right)
+    private static object? Divide(object? left, object? right)
     {
         if (left == null || right == null)
         {
@@ -121,7 +121,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         throw new InvalidOperationException($"Cannot divide {left.GetType()} and {right.GetType()}");
     }
 
-    private static bool Equals(object left, object right)
+    private static bool EqualsPrivate(object? left, object? right)
     {
         if (left == null && right == null)
         {
@@ -136,7 +136,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         return object.Equals(left, right);
     }
 
-    private static object FloorDivide(object left, object right)
+    private static object? FloorDivide(object? left, object? right)
     {
         if (left == null || right == null)
         {
@@ -151,7 +151,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         throw new InvalidOperationException($"Cannot floor divide {left.GetType()} and {right.GetType()}");
     }
 
-    private static bool In(object left, object right)
+    private static bool In(object left, object? right)
     {
         if (right == null)
         {
@@ -162,7 +162,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         {
             foreach (var item in enumerable)
             {
-                if (Equals(left, item))
+                if (EqualsPrivate(left, item))
                 {
                     return true;
                 }
@@ -179,7 +179,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         throw new InvalidOperationException($"Cannot perform 'in' with {left?.GetType()} and {right.GetType()}");
     }
 
-    private static bool Is(object left, object right) 
+    private static bool Is(object? left, object? right) 
     {
         if (right is not string testName)
         {
@@ -197,7 +197,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         };
     }
 
-    private static bool IsTrue(object value)
+    private static bool IsTrue(object? value)
     {
         return value switch
         {
@@ -211,7 +211,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         };
     }
 
-    private static object Modulo(object left, object right)
+    private static object? Modulo(object? left, object? right)
     {
         if (left == null || right == null)
         {
@@ -226,7 +226,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         throw new InvalidOperationException($"Cannot modulo {left.GetType()} and {right.GetType()}");
     }
 
-    private static object Multiply(object left, object right)
+    private static object? Multiply(object? left, object? right)
     {
         if (left == null || right == null)
         {
@@ -241,7 +241,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         throw new InvalidOperationException($"Cannot multiply {left.GetType()} and {right.GetType()}");
     }
 
-    private static object Subtract(object left, object right)
+    private static object? Subtract(object? left, object? right)
     {
         if (left == null || right == null)
         {

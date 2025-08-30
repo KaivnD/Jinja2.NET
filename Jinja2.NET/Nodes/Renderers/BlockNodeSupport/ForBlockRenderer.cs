@@ -8,12 +8,12 @@ public class ForBlockRenderer : INodeRenderer
 {
     private readonly ILoopProcessorFactory _processorFactory;
 
-    public ForBlockRenderer(ILoopProcessorFactory processorFactory = null)
+    public ForBlockRenderer(ILoopProcessorFactory? processorFactory = null)
     {
         _processorFactory = processorFactory ?? new LoopProcessorFactory();
     }
 
-    public object Render(ASTNode nodeIn, IRenderer renderer)
+    public object? Render(ASTNode nodeIn, IRenderer renderer)
     {
         if (nodeIn is not BlockNode node ||
             !node.Name.Equals(TemplateConstants.BlockNames.For, StringComparison.OrdinalIgnoreCase))

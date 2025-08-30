@@ -22,7 +22,7 @@ public class FilterNode : ExpressionNode, IVisitable
     Arguments.AddRange(arguments);
   }
 
-  public override object Accept(INodeVisitor visitor)
+  public override object? Accept(INodeVisitor visitor)
   {
     return visitor.Visit(this);
   }

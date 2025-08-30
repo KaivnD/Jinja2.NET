@@ -1,27 +1,28 @@
 ﻿using Jinja2.NET.Nodes;
 using Jinja2.NET.Parsers;
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 namespace Jinja2.NET;
 
 public class MainParser
 {
     private readonly LexerConfig _config;
-    protected readonly TagParserRegistry _tagRegistry;
-    protected ExpressionParser _expressionParser;
+    protected readonly TagParserRegistry? _tagRegistry;
+    protected ExpressionParser? _expressionParser;
     private List<Token> _lastTokens;
-    protected StatementParser _statementParser;
+    protected StatementParser? _statementParser;
     public LexerConfig Config => _config;
-    public ExpressionParser ExpressionParser => _expressionParser;
-    public Lexer LastLexer { get; private set; }
+    public ExpressionParser? ExpressionParser => _expressionParser;
+    public Lexer? LastLexer { get; private set; }
 
     public Func<string, LexerConfig, Lexer> LexerFactory { get; set; }
-    public StatementParser StatementParser => _statementParser;
+    public StatementParser? StatementParser => _statementParser;
 
     // Expose all components for advanced access
-    public TagParserRegistry TagRegistry => _tagRegistry;
-    public TemplateBodyParser TemplateBodyParser { get; private set; }
+    public TagParserRegistry? TagRegistry => _tagRegistry;
+    public TemplateBodyParser? TemplateBodyParser { get; private set; }
 
-    public MainParser(LexerConfig config = null, Action<MainParserBuilder> configure = null)
+    public MainParser(LexerConfig? config = null, Action<MainParserBuilder>? configure = null)
     {
         _config = config ?? new LexerConfig();
         _tagRegistry = new TagParserRegistry();
@@ -66,7 +67,7 @@ public class MainParser
         return _lastTokens != null && _lastTokens.Count > 0;
     }
 
-    public virtual TemplateNode Parse(string source)
+    public virtual TemplateNode? Parse(string source)
     {
         IReadOnlyList<Token> tokens;
 
@@ -87,7 +88,10 @@ public class MainParser
         try
         {
             var tokenIterator = new TokenIterator(_lastTokens);
-            return TemplateBodyParser.Parse(tokenIterator);
+            if (TemplateBodyParser != null)
+            {
+                return TemplateBodyParser.Parse(tokenIterator);
+            }
         }
         catch (Exception ex)
         {
@@ -98,9 +102,11 @@ public class MainParser
                 Stage = EParsingStage.Parsing
             };
         }
+
+        return null;
     }
 
-    public (TemplateNode Node, IReadOnlyList<Token> Tokens) ParseWithTokens(string source)
+    public (TemplateNode? Node, IReadOnlyList<Token> Tokens) ParseWithTokens(string source)
     {
         var node = Parse(source);
         return (node, _lastTokens);
@@ -108,9 +114,9 @@ public class MainParser
 
     // Factory method for creating parser with custom dependencies
     public void ReplaceAllParsers(
-        ExpressionParser expressionParser = null,
-        StatementParser statementParser = null,
-        TemplateBodyParser templateBodyParser = null)
+        ExpressionParser? expressionParser = null,
+        StatementParser? statementParser = null,
+        TemplateBodyParser? templateBodyParser = null)
     {
         if (expressionParser != null)
         {
@@ -192,7 +198,7 @@ public class MainParser
         }
     }
 
-    public bool TryParse(string source, out TemplateNode node, out TemplateParsingException error)
+    public bool TryParse(string source, out TemplateNode? node, out TemplateParsingException? error)
     {
         try
         {
@@ -208,7 +214,7 @@ public class MainParser
         }
     }
 
-    public bool TryTokenize(string source, out IReadOnlyList<Token> tokens, out Exception error)
+    public bool TryTokenize(string source, out IReadOnlyList<Token> tokens, out Exception? error)
     {
         try
         {

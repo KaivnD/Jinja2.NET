@@ -2,6 +2,6 @@
 
 public interface IVisitable
 {
-    object Accept(INodeVisitor visitor);
+    object? Accept(INodeVisitor visitor);
     INodeRenderer GetRenderer();
 }

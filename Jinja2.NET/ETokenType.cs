@@ -2,6 +2,7 @@
 
 public enum ETokenType
 {
+    None,
     Text,
     VariableStart,    // {{
     VariableEnd,      // }}

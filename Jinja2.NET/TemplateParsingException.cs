@@ -2,8 +2,8 @@
 
 public class TemplateParsingException : Exception
 {
-    public string Source { get; set; }
-    public IReadOnlyList<Token> Tokens { get; set; }
+    //public string Source { get; set; }
+    public IReadOnlyList<Token>? Tokens { get; set; }
     public EParsingStage Stage { get; set; }
 
     public TemplateParsingException(string message) : base(message) { }

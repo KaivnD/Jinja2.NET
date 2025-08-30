@@ -16,7 +16,7 @@ public class VariableNode : ASTNode, IVisitable
     Expression = expression;
   }
 
-  public override object Accept(INodeVisitor visitor)
+  public override object? Accept(INodeVisitor visitor)
   {
     return visitor.Visit(this);
   }

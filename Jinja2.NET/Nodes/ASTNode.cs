@@ -4,5 +4,5 @@ namespace Jinja2.NET.Nodes;
 
 public abstract class ASTNode
 {
-    public abstract object Accept(INodeVisitor visitor);
+    public abstract object? Accept(INodeVisitor visitor);
 }

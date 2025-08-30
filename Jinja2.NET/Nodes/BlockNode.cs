@@ -27,7 +27,7 @@ public class BlockNode : ASTNode, IVisitable
     Children.AddRange(children);
   }
 
-  public override object Accept(INodeVisitor visitor)
+  public override object? Accept(INodeVisitor visitor)
   {
     return visitor.Visit(this);
   }

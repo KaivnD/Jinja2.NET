@@ -188,7 +188,7 @@ public class RendererTests
         _output.WriteLine(astDebug);
 
         object context;
-        TemplateContext templateContext = null;
+        TemplateContext? templateContext = null;
         if (useTemplateContext)
         {
             templateContext = new TemplateContext();

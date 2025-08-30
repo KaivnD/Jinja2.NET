@@ -5,16 +5,19 @@ namespace Jinja2.NET;
 public class TemplateContext : IVariableContext
 {
     private readonly List<Dictionary<string, object>> _scopes = new();
-    private readonly Dictionary<string, object> _variables = new();
 
-    public virtual object Get(string name)
+    private readonly Dictionary<string, object?> _variables = new();
+
+    public virtual object? Get(string name)
     {
         // Check current scopes first (most recent to oldest)
         for (var i = _scopes.Count - 1; i >= 0; i--)
+        {
             if (_scopes[i].TryGetValue(name, out var value))
             {
                 return value;
             }
+        }
 
         // Check global variables
         return _variables.TryGetValue(name, out var globalValue) ? globalValue : null;
@@ -55,7 +58,7 @@ public class TemplateContext : IVariableContext
     }
 
     // Add overload that LoggingTemplateContext expects
-    public virtual void SetAll(object obj)
+    public virtual void SetAll(object? obj)
     {
         if (obj == null)
         {
@@ -75,14 +78,18 @@ public class TemplateContext : IVariableContext
                 var properties = obj.GetType().GetProperties();
                 foreach (var prop in properties)
                 {
-                    Set(prop.Name, prop.GetValue(obj));
+                    object? value = prop.GetValue(obj);
+                    if (value != null)
+                    {
+                        Set(prop.Name, value);
+                    }
                 }
 
                 break;
         }
     }
 
-    public virtual void SetVariableInGlobalScope(string name, object value)
+    public virtual void SetVariableInGlobalScope(string name, object? value)
     {
         _variables[name] = value;
     }

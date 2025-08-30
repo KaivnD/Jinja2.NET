@@ -5,7 +5,7 @@ namespace Jinja2.NET.Nodes.Renderers;
 
 public class IdentifierNodeRenderer : INodeRenderer
 {
-    public object Render(ASTNode node, IRenderer renderer)
+    public object? Render(ASTNode node, IRenderer renderer)
     {
         if (node is not IdentifierNode idNode)
         {
