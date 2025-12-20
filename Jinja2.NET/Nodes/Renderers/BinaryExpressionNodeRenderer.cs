@@ -31,6 +31,8 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
             ">=" => Compare(left, right) >= 0,
             "in" => In(left, right),
             "is" => Is(left, right),
+            "and" => And(left, right),
+            "or" => Or(left, right),
             _ => throw new InvalidOperationException($"Unsupported operator: {node.Operator}")
         };
     }
@@ -179,7 +181,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         throw new InvalidOperationException($"Cannot perform 'in' with {left?.GetType()} and {right.GetType()}");
     }
 
-    private static bool Is(object? left, object? right) 
+    private static bool Is(object? left, object? right)
     {
         if (right is not string testName)
         {
@@ -191,13 +193,31 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
             "defined" => left != null,
             "undefined" => left == null,
             "none" => left == null,
-            "true" => IsTrue(left), 
+            "true" => IsTrue(left),
             "false" => !IsTrue(left),
             _ => throw new InvalidOperationException($"Unsupported test: {testName}")
         };
     }
 
-    private static bool IsTrue(object? value)
+    private static bool And(object? left, object? right)
+    {
+        if (!IsTrue(left))
+        {
+            return false;
+        }
+        return IsTrue(right);
+    }
+
+    private static bool Or(object? left, object? right)
+    {
+        if (IsTrue(left))
+        {
+            return true;
+        }
+        return IsTrue(right);
+    }
+
+    internal static bool IsTrue(object? value)
     {
         return value switch
         {

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Jinja2.NET.Interfaces;
 using Jinja2.NET.Nodes;
@@ -28,49 +28,62 @@ public class ExpressionParser : IExpressionParser
         var node = ParseBinary(tokens, 0, stopTokenType);
         tokens.SkipWhitespace();
 
-        // DON'T consume tokens that might be valid keywords for other parsers
-        // Only consume tokens that are definitely syntax errors
-        while (!tokens.IsAtEnd() && tokens.Peek().Type != stopTokenType)
-        {
-            var token = tokens.Peek();
-
-            // Don't consume tokens that might be valid keywords
-            if (token.Type == ETokenType.Identifier &&
-                (token.Value.Equals("recursive", StringComparison.OrdinalIgnoreCase) ||
-                 token.Value.Equals("else", StringComparison.OrdinalIgnoreCase) ||
-                 token.Value.Equals("elif", StringComparison.OrdinalIgnoreCase) ||
-                 token.Value.Equals("endif", StringComparison.OrdinalIgnoreCase) ||
-                 token.Value.Equals("endfor", StringComparison.OrdinalIgnoreCase)))
-            {
-                // Stop here - let the calling parser handle these keywords
-                break;
-            }
-
-            Debug.WriteLine(
-                $"Unexpected token in expression: {token.Type}:{token.Value} at {tokens.CurrentLocation}");
-            tokens.Consume(token.Type);
-        }
+        // Removed the loop that consumed unexpected tokens.
+        // This loop was incorrectly consuming list separators (Comma) and subsequent elements
+        // because they were not the stopTokenType (RightBracket).
+        // It is better to let the caller handle any remaining tokens.
 
         Debug.WriteLine($"After Parse: {tokens.Peek().Type}:{tokens.Peek().Value} at {tokens.CurrentLocation}");
         return node;
     }
+
+    /// <summary>
+    /// 重构后的属性解析方法：支持「属性访问.」和「索引访问[]」的链式调用
+    /// </summary>
+    /// <param name="tokens">令牌迭代器</param>
+    /// <returns>解析后的表达式节点</returns>
     protected virtual ExpressionNode ParseAttribute(TokenIterator tokens)
     {
         tokens.SkipWhitespace();
+        // 先解析原始节点（标识符、字面量等）
         var node = ParsePrimary(tokens);
-        while (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Dot)
-        {
-            tokens.Consume(ETokenType.Dot);
-            tokens.SkipWhitespace();
-            var nextToken = tokens.Peek();
-            if (nextToken.Type != ETokenType.Identifier)
-            {
-                throw new InvalidOperationException(
-                    $"Expected Identifier after '.', got {nextToken.Type} ('{nextToken.Value}') at {nextToken.Line}:{nextToken.Column}");
-            }
 
-            var attrToken = tokens.Consume(ETokenType.Identifier);
-            node = new AttributeNode(node, attrToken.Value);
+        // 循环处理：属性访问（.）或索引访问（[]），支持链式调用（如 messages[0].role[1].name）
+        while (!tokens.IsAtEnd())
+        {
+            tokens.SkipWhitespace();
+            var nextTokenType = tokens.Peek().Type;
+
+            // 处理属性访问：.xxx
+            if (nextTokenType == ETokenType.Dot)
+            {
+                tokens.Consume(ETokenType.Dot);
+                tokens.SkipWhitespace();
+                var attrToken = tokens.Peek();
+                if (attrToken.Type != ETokenType.Identifier)
+                {
+                    throw new InvalidOperationException(
+                        $"Expected Identifier after '.', got {attrToken.Type} ('{attrToken.Value}') at {attrToken.Line}:{attrToken.Column}");
+                }
+                tokens.Consume(ETokenType.Identifier);
+                node = new AttributeNode(node, attrToken.Value);
+            }
+            // 处理索引访问：[xxx]
+            else if (nextTokenType == ETokenType.LeftBracket)
+            {
+                tokens.Consume(ETokenType.LeftBracket);
+                tokens.SkipWhitespace();
+                // 递归解析索引表达式（支持复杂索引，如 messages[user.id + 1]）
+                var indexNode = Parse(tokens, ETokenType.RightBracket);
+                tokens.SkipWhitespace();
+                tokens.Consume(ETokenType.RightBracket);
+                node = new IndexNode(node, indexNode);
+            }
+            // 非属性/索引访问，终止循环
+            else
+            {
+                break;
+            }
         }
 
         return node;
@@ -85,7 +98,7 @@ public class ExpressionParser : IExpressionParser
             tokens.SkipWhitespace();
             var token = tokens.Peek();
             var (precedence, isRightAssociative, op) = GetOperatorPrecedence(token);
-            if (precedence == 0 && !token.Value.Equals("or") && !token.Value.Equals("and"))
+            if (precedence == 0 && !token.Value.Equals("or", StringComparison.OrdinalIgnoreCase) && !token.Value.Equals("and", StringComparison.OrdinalIgnoreCase))
             {
                 break;
             }
@@ -107,7 +120,8 @@ public class ExpressionParser : IExpressionParser
     protected virtual ExpressionNode ParseFilter(TokenIterator tokens, ETokenType stopTokenType)
     {
         tokens.SkipWhitespace();
-        var node = ParseIndex(tokens, stopTokenType);
+        // 调整为直接调用 ParseAttribute（已包含索引解析），移除多余的 ParseIndex
+        var node = ParseAttribute(tokens);
         while (!tokens.IsAtEnd() && tokens.Peek().Type != stopTokenType)
         {
             tokens.SkipWhitespace();
@@ -153,27 +167,16 @@ public class ExpressionParser : IExpressionParser
         return node;
     }
 
+    /// <summary>
+    /// 简化 ParseIndex：透传至 ParseAttribute（已包含索引解析逻辑）
+    /// 保持方法兼容性，可后续直接移除
+    /// </summary>
+    /// <param name="tokens">令牌迭代器</param>
+    /// <param name="stopTokenType">终止令牌类型</param>
+    /// <returns>解析后的表达式节点</returns>
     protected virtual ExpressionNode ParseIndex(TokenIterator tokens, ETokenType stopTokenType)
     {
-        tokens.SkipWhitespace();
-        var node = ParseAttribute(tokens);
-        while (!tokens.IsAtEnd() && tokens.Peek().Type != stopTokenType)
-        {
-            tokens.SkipWhitespace();
-            if (tokens.Peek().Type != ETokenType.LeftBracket)
-            {
-                break;
-            }
-
-            tokens.Consume(ETokenType.LeftBracket);
-            tokens.SkipWhitespace();
-            var index = Parse(tokens, ETokenType.RightBracket);
-            tokens.SkipWhitespace();
-            tokens.Consume(ETokenType.RightBracket);
-            node = new IndexNode(node, index);
-        }
-
-        return node;
+        return ParseAttribute(tokens);
     }
 
     protected virtual ExpressionNode ParseListLiteral(TokenIterator tokens)
@@ -183,24 +186,11 @@ public class ExpressionParser : IExpressionParser
 
         while (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.RightBracket)
         {
+            tokens.SkipWhitespace();
             var token = tokens.Peek();
-            if (token.Type == ETokenType.Number)
-            {
-                tokens.Consume(ETokenType.Number);
-                if (double.TryParse(token.Value, out var number))
-                {
-                    elements.Add(new LiteralNode(number));
-                }
-                else
-                {
-                    throw new InvalidOperationException(
-                        $"Invalid number: '{token.Value}' at {token.Line}:{token.Column}");
-                }
-            }
-            else
-            {
-                break; // Stop for non-number tokens
-            }
+            // 支持任意表达式作为列表元素，而非仅数字
+            elements.Add(Parse(tokens, ETokenType.RightBracket));
+            tokens.SkipWhitespace();
 
             if (tokens.Peek().Type == ETokenType.Comma)
             {
@@ -208,7 +198,8 @@ public class ExpressionParser : IExpressionParser
             }
             else if (tokens.Peek().Type != ETokenType.RightBracket)
             {
-                break; // Prevent over-consumption
+                throw new InvalidOperationException(
+                    $"Expected Comma or RightBracket in list literal at {tokens.CurrentLocation.Line}:{tokens.CurrentLocation.Column}");
             }
         }
 
@@ -229,20 +220,21 @@ public class ExpressionParser : IExpressionParser
         switch (token.Type)
         {
             case ETokenType.Identifier:
-                if (token.Value == "or" || token.Value == "and")
+                var identifierValue = token.Value;
+                if (identifierValue.Equals("or", StringComparison.OrdinalIgnoreCase) || identifierValue.Equals("and", StringComparison.OrdinalIgnoreCase))
                 {
                     throw new InvalidOperationException(
-                        $"Unexpected logical operator '{token.Value}' in primary expression at {token.Line}:{token.Column}");
+                        $"Unexpected logical operator '{identifierValue}' in primary expression at {token.Line}:{token.Column}");
                 }
 
-                // Add boolean literal handling
-                if (token.Value == "true")
+                // 布尔字面量处理（忽略大小写）
+                if (identifierValue.Equals("true", StringComparison.OrdinalIgnoreCase))
                 {
                     tokens.Consume(ETokenType.Identifier);
                     return new LiteralNode(true);
                 }
 
-                if (token.Value == "false")
+                if (identifierValue.Equals("false", StringComparison.OrdinalIgnoreCase))
                 {
                     tokens.Consume(ETokenType.Identifier);
                     return new LiteralNode(false);
@@ -250,18 +242,18 @@ public class ExpressionParser : IExpressionParser
 
                 tokens.Consume(ETokenType.Identifier);
 
-                // Check for function call syntax
+                // 函数调用解析
                 if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.LeftParen)
                 {
-                    return ParseFunctionCall(token.Value, tokens);
+                    return ParseFunctionCall(identifierValue, tokens);
                 }
 
-                return new IdentifierNode(token.Value);
+                return new IdentifierNode(identifierValue);
 
             case ETokenType.Number:
                 tokens.Consume(ETokenType.Number);
 
-                // Try to parse as int first, then double
+                // 优先解析整数，再解析浮点数
                 if (int.TryParse(token.Value, out var intNumber))
                 {
                     return new LiteralNode(intNumber);
@@ -305,9 +297,10 @@ public class ExpressionParser : IExpressionParser
 
     private (int Precedence, bool IsRightAssociative, string Operator) GetOperatorPrecedence(Token token)
     {
+        // 逻辑运算符（and/or）
         if (token.Type == ETokenType.Identifier)
         {
-            return token.Value switch
+            return token.Value.ToLowerInvariant() switch
             {
                 "in" => (20, false, "in"),
                 "is" => (20, false, "is"),
@@ -317,30 +310,23 @@ public class ExpressionParser : IExpressionParser
             };
         }
 
-        if (token.Type == ETokenType.Text || token.Type == ETokenType.Operator)
+        // 二元比较/算术运算符
+        var tokenValue = token.Value;
+        return tokenValue switch
         {
-            return token.Value switch
-            {
-                "!=" => (20, false, "!="),
-                "<" => (20, false, "<"),
-                ">" => (20, false, ">"),
-                "<=" => (20, false, "<="),
-                ">=" => (20, false, ">="),
-                "//" => (40, false, "//"),
-                "%" => (40, false, "%"),
-                "==" => (20, false, "=="),
-                _ => (0, false, "")
-            };
-        }
-
-        return token.Type switch
-        {
-            ETokenType.Pipe => (10, false, "|"),
-            ETokenType.Equals => (20, false, "=="),
-            ETokenType.Plus => (30, false, "+"),
-            ETokenType.Minus => (30, false, "-"),
-            ETokenType.Multiply => (40, false, "*"),
-            ETokenType.Divide => (40, false, "/"),
+            "!=" => (20, false, "!="),
+            "<" => (20, false, "<"),
+            ">" => (20, false, ">"),
+            "<=" => (20, false, "<="),
+            ">=" => (20, false, ">="),
+            "//" => (40, false, "//"),
+            "%" => (40, false, "%"),
+            "==" => (20, false, "=="),
+            "+" => (30, false, "+"),
+            "-" => (30, false, "-"),
+            "*" => (40, false, "*"),
+            "/" => (40, false, "/"),
+            "|" => (10, false, "|"),
             _ => (0, false, "")
         };
     }
@@ -350,14 +336,17 @@ public class ExpressionParser : IExpressionParser
         tokens.Consume(ETokenType.LeftParen);
         var arguments = new List<ExpressionNode>();
 
-        // Parse function arguments
+        // 解析函数参数
+        tokens.SkipWhitespace();
         while (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.RightParen)
         {
             arguments.Add(Parse(tokens, ETokenType.RightParen));
+            tokens.SkipWhitespace();
 
             if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Comma)
             {
                 tokens.Consume(ETokenType.Comma);
+                tokens.SkipWhitespace();
             }
         }
 
@@ -367,7 +356,7 @@ public class ExpressionParser : IExpressionParser
 
     private static string ReplaceUnicodeNames(string input)
     {
-        // Only handle HOT SPRINGS for now
+        // 仅处理 HOT SPRINGS 示例
         return Regex.Replace(input, @"\\N\{HOT SPRINGS\}", "\u2668");
     }
 }

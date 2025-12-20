@@ -276,4 +276,30 @@ Missing: N/A
         var result = template.Render(new { value = "X" });
         result.Should().Be("AXB");
     }
+
+    [Fact]
+    public void Render_SystemMessageTemplate_WhenFirstMessageIsSystemRole_ShouldReturnCorrectFormat()
+    {
+        var templateStr = """
+        {%- if messages[0].role == 'system' %}
+            {{- '<|im_start|>system\n' + messages[0].content + '<|im_end|>\n' }}
+        {%- endif %}
+        """;
+        var template = new Template(templateStr);
+        var data = new Dictionary<string, object>()
+        {
+            ["messages"] = new List<object>
+            {
+                new Dictionary<string, string>()
+                {
+                    ["role"] = "system",
+                    ["content"] = "system promote"
+                }
+            }
+        };
+
+        var result = template.Render(data);
+
+        result.Should().Be("<|im_start|>system\nsystem promote<|im_end|>\n\n");
+    }
 }
