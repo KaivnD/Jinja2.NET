@@ -79,18 +79,66 @@ public class ExpressionParser : IExpressionParser
                     node = new AttributeNode(node, attrToken.Value);
                 }
             }
-            // 处理索引访问：[xxx]
             else if (nextTokenType == ETokenType.LeftBracket)
             {
                 tokens.Consume(ETokenType.LeftBracket);
                 tokens.SkipWhitespace();
-                // 递归解析索引表达式（支持复杂索引，如 messages[user.id + 1]）
-                var indexNode = Parse(tokens, ETokenType.RightBracket);
-                tokens.SkipWhitespace();
-                tokens.Consume(ETokenType.RightBracket);
-                node = new IndexNode(node, indexNode);
+
+                ExpressionNode? start = null;
+                ExpressionNode? stop = null;
+                ExpressionNode? step = null;
+
+                var isSlice = false;
+
+                if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Colon)
+                {
+                    // omitted start
+                    isSlice = true;
+                }
+                else
+                {
+                    start = Parse(tokens, ETokenType.RightBracket);
+                    tokens.SkipWhitespace();
+                    if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Colon)
+                    {
+                        isSlice = true;
+                    }
+                }
+
+                if (isSlice)
+                {
+                    tokens.SkipWhitespace();
+                    tokens.Consume(ETokenType.Colon);
+                    tokens.SkipWhitespace();
+
+                    if (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.Colon && tokens.Peek().Type != ETokenType.RightBracket)
+                    {
+                        stop = Parse(tokens, ETokenType.RightBracket);
+                    }
+
+                    tokens.SkipWhitespace();
+                    if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Colon)
+                    {
+                        tokens.Consume(ETokenType.Colon);
+                        tokens.SkipWhitespace();
+                        if (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.RightBracket)
+                        {
+                            step = Parse(tokens, ETokenType.RightBracket);
+                        }
+                    }
+
+                    tokens.SkipWhitespace();
+                    tokens.Consume(ETokenType.RightBracket);
+                    var sliceNode = new Nodes.SliceNode(start, stop, step);
+                    node = new IndexNode(node, sliceNode);
+                }
+                else
+                {
+                    tokens.SkipWhitespace();
+                    tokens.Consume(ETokenType.RightBracket);
+                    node = new IndexNode(node, start!);
+                }
             }
-            // 非属性/索引访问，终止循环
             else
             {
                 break;
