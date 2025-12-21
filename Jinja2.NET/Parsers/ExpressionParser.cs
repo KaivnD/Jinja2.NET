@@ -66,7 +66,18 @@ public class ExpressionParser : IExpressionParser
                         $"Expected Identifier after '.', got {attrToken.Type} ('{attrToken.Value}') at {attrToken.Line}:{attrToken.Column}");
                 }
                 tokens.Consume(ETokenType.Identifier);
-                node = new AttributeNode(node, attrToken.Value);
+
+                // Method Call Detection
+                tokens.SkipWhitespace();
+                if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.LeftParen)
+                {
+                    var (args, kwargs) = ParseCallArguments(tokens);
+                    node = new MethodCallNode(node, attrToken.Value, args, kwargs);
+                }
+                else
+                {
+                    node = new AttributeNode(node, attrToken.Value);
+                }
             }
             // 处理索引访问：[xxx]
             else if (nextTokenType == ETokenType.LeftBracket)
@@ -120,8 +131,8 @@ public class ExpressionParser : IExpressionParser
     protected virtual ExpressionNode ParseFilter(TokenIterator tokens, ETokenType stopTokenType)
     {
         tokens.SkipWhitespace();
-        // 调整为直接调用 ParseAttribute（已包含索引解析），移除多余的 ParseIndex
-        var node = ParseAttribute(tokens);
+        // 调整为调用 ParseUnary 以支持一元运算符
+        var node = ParseUnary(tokens);
         while (!tokens.IsAtEnd() && tokens.Peek().Type != stopTokenType)
         {
             tokens.SkipWhitespace();
@@ -165,6 +176,22 @@ public class ExpressionParser : IExpressionParser
         }
 
         return node;
+    }
+
+    protected virtual ExpressionNode ParseUnary(TokenIterator tokens)
+    {
+        tokens.SkipWhitespace();
+        var token = tokens.Peek();
+        
+        if (token.Type == ETokenType.Minus || token.Type == ETokenType.Plus || 
+            (token.Type == ETokenType.Identifier && token.Value.Equals("not", StringComparison.OrdinalIgnoreCase)))
+        {
+            tokens.Consume(token.Type);
+            var operand = ParseUnary(tokens);
+            return new UnaryExpressionNode(token.Value, operand);
+        }
+
+        return ParseAttribute(tokens);
     }
 
     /// <summary>
@@ -333,14 +360,39 @@ public class ExpressionParser : IExpressionParser
 
     private ExpressionNode ParseFunctionCall(string functionName, TokenIterator tokens)
     {
+        var (arguments, kwargs) = ParseCallArguments(tokens);
+        return new FunctionCallNode(functionName, arguments, kwargs);
+    }
+
+    private (List<ExpressionNode> args, Dictionary<string, ExpressionNode> kwargs) ParseCallArguments(TokenIterator tokens)
+    {
         tokens.Consume(ETokenType.LeftParen);
         var arguments = new List<ExpressionNode>();
+        var kwargs = new Dictionary<string, ExpressionNode>();
 
         // 解析函数参数
         tokens.SkipWhitespace();
         while (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.RightParen)
         {
-            arguments.Add(Parse(tokens, ETokenType.RightParen));
+            var arg = Parse(tokens, ETokenType.RightParen);
+            tokens.SkipWhitespace();
+
+            if (arg is IdentifierNode idNode && !tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Equals)
+            {
+                tokens.Consume(ETokenType.Equals);
+                tokens.SkipWhitespace();
+                var val = Parse(tokens, ETokenType.RightParen);
+                kwargs[idNode.Name] = val;
+            }
+            else
+            {
+                if (kwargs.Count > 0)
+                {
+                    throw new TemplateParsingException("Positional argument follows keyword argument");
+                }
+                arguments.Add(arg);
+            }
+
             tokens.SkipWhitespace();
 
             if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Comma)
@@ -351,7 +403,7 @@ public class ExpressionParser : IExpressionParser
         }
 
         tokens.Consume(ETokenType.RightParen);
-        return new FunctionCallNode(functionName, arguments);
+        return (arguments, kwargs);
     }
 
     private static string ReplaceUnicodeNames(string input)

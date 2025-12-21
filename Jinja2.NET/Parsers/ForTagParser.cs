@@ -1,4 +1,4 @@
-﻿using Jinja2.NET.Interfaces;
+using Jinja2.NET.Interfaces;
 using Jinja2.NET.Models;
 using Jinja2.NET.Nodes;
 
@@ -77,16 +77,19 @@ public class ForTagParser : ITagParser
     //    block.Arguments.Add(iterable);
     //}
 
-    private void ConsumeEndFor(TokenIterator tokens)
+    private void ConsumeEndFor(TokenIterator tokens, BlockNode block)
     {
         if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.BlockStart)
         {
             var next = tokens.Peek(1);
             if (next.Type == ETokenType.Identifier && next.Value.Equals("endfor", StringComparison.OrdinalIgnoreCase))
             {
-                tokens.Consume(ETokenType.BlockStart);
+                var startToken = tokens.Consume(ETokenType.BlockStart);
                 tokens.Consume(ETokenType.Identifier); // endfor
-                tokens.Consume(ETokenType.BlockEnd);
+                var endToken = tokens.Consume(ETokenType.BlockEnd);
+
+                block.TrimBodyRight = startToken.TrimLeft;
+                block.TrimRight = endToken.TrimRight;
                 return;
             }
         }
@@ -149,7 +152,7 @@ public class ForTagParser : ITagParser
         ParseOptionalElseBlock(tokens, blockBodyParser, block);
 
         // Expect and consume endfor
-        ConsumeEndFor(tokens);
+        ConsumeEndFor(tokens, block);
     }
 
     private void ParseForSyntax(TokenIterator tokens, IExpressionParser expressionParser, BlockNode block)
@@ -229,7 +232,7 @@ public class ForTagParser : ITagParser
 
         block.EndMarkerType = endToken.Type;
         block.TrimLeft = blockStartToken.TrimLeft;
-        block.TrimRight = endToken.TrimRight;
+        block.TrimBodyLeft = endToken.TrimRight;
     }
 
     private static void ThrowUnexpectedTokenException(TokenIterator tokens, string expectedKeyword)

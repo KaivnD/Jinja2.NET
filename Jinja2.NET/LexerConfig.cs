@@ -1,4 +1,4 @@
-﻿namespace Jinja2.NET;
+namespace Jinja2.NET;
 
 public class LexerConfig
 {
@@ -20,5 +20,5 @@ public class LexerConfig
     public string[] StartDelimiters { get; set; } = new[] { "{{-", "{%-", "{#-", "{{", "{%", "{#" };
 
     public string TokenPattern { get; set; } =
-        @"(\{\{|\}\}|\{\%|\%\}|\{\#|\#\}|([a-zA-Z_][a-zA-Z0-9_]*)|(\d+(?:\.\d+)?)|(""[^""]*""|'[^']*')|[+\-*/=<>!]=?|[|.(),\[\]:=]|\s+)";
+        @"(\{\{|\}\}|\{\%|\%\}|\{\#|\#\}|([a-zA-Z_][a-zA-Z0-9_]*)|(\d+(?:\.\d+)?)|(""(\\.|[^""\\])*""|'(\\.|[^'\\])*')|[+\-*/=<>!]=?|[|.(),\[\]:=]|\s+)";
 }

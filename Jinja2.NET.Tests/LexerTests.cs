@@ -32,6 +32,8 @@ public class LexerTests
     [Theory]
     [InlineData("{{ \"\\n\" }}", "\"\\n\"")]
     [InlineData("{{ \"\\u2668\" }}", "\"\\u2668\"")]
+    [InlineData("{{ \"\\\"\" }}", "\"\\\"\"")]
+    [InlineData("{{ \"a \\\" b\" }}", "\"a \\\" b\"")]
     public void Lexer_Should_Emit_Quoted_String_Tokens_With_Escapes(string input, string expected)
     {
         var lexer = new Lexer(input);

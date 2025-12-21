@@ -1,4 +1,4 @@
-﻿using Jinja2.NET.Interfaces;
+using Jinja2.NET.Interfaces;
 using Jinja2.NET.Models;
 using Jinja2.NET.Nodes;
 
@@ -10,7 +10,7 @@ public class SetTagParser : ITagParser
         IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType)
     {
         var blockStartToken = GetBlockStartToken(tokens);
-        var identifiers = ParseIdentifiers(tokens, tagStartLocation);
+        var targets = ParseTargets(tokens, expressionParser);
         var expression = ParseAssignmentExpression(tokens, expressionParser, tagStartLocation);
         tokens.SkipWhitespace();
         var nextToken = tokens.Peek();
@@ -22,7 +22,7 @@ public class SetTagParser : ITagParser
         }
 
         var endToken = ConsumeBlockEndToken(tokens);
-        var block = CreateSetBlock(identifiers, expression, tagStartTokenType, endToken, blockStartToken);
+        var block = CreateSetBlock(targets, expression, tagStartTokenType, endToken, blockStartToken);
         if (isLoopScoped)
         {
             block.IsLoopScoped = true; // Mark as loop-scoped
@@ -45,10 +45,10 @@ public class SetTagParser : ITagParser
         }
     }
 
-    private static BlockNode CreateSetBlock(List<IdentifierNode> identifiers, ExpressionNode expression,
+    private static BlockNode CreateSetBlock(List<ExpressionNode> targets, ExpressionNode expression,
         ETokenType tagStartTokenType, Token endToken, Token blockStartToken)
     {
-        var arguments = new List<ExpressionNode>(identifiers) { expression };
+        var arguments = new List<ExpressionNode>(targets) { expression };
         return new BlockNode(TemplateConstants.BlockNames.Set, arguments, new List<ASTNode>())
         {
             StartMarkerType = tagStartTokenType,
@@ -62,11 +62,6 @@ public class SetTagParser : ITagParser
     private static Token GetBlockStartToken(TokenIterator tokens)
     {
         return tokens.Peek(-1); // The last consumed token should be BlockStart
-    }
-
-    private static bool HasMoreIdentifiers(TokenIterator tokens)
-    {
-        return !tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Identifier;
     }
 
     private static ExpressionNode ParseAssignmentExpression(TokenIterator tokens, IExpressionParser expressionParser,
@@ -96,38 +91,35 @@ public class SetTagParser : ITagParser
         return expressionParser.Parse(exprIterator);
     }
 
-    private static List<IdentifierNode> ParseIdentifiers(TokenIterator tokens, SourceLocation tagStartLocation)
+    private List<ExpressionNode> ParseTargets(TokenIterator tokens, IExpressionParser expressionParser)
     {
+        var targets = new List<ExpressionNode>();
         tokens.SkipWhitespace();
-        tokens.Consume(ETokenType.Identifier); // Consumes 'set'
-        var identifiers = new List<IdentifierNode>();
-
-        // Only consume identifiers until we see '='
-        while (HasMoreIdentifiers(tokens) && tokens.Peek().Type == ETokenType.Identifier)
+        
+        // Consume the 'set' keyword
+        if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Identifier)
         {
-            // Stop if the next token after this identifier is '='
-            if (tokens.Peek(1).Type == ETokenType.Equals)
+            tokens.Consume(ETokenType.Identifier);
+        }
+        
+        while (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.Equals && tokens.Peek().Type != ETokenType.BlockEnd)
+        {
+            // Parse target expression (identifier or attribute access)
+            var target = expressionParser.Parse(tokens, ETokenType.Comma);
+            targets.Add(target);
+             
+            tokens.SkipWhitespace();
+            if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Comma)
+            {
+                tokens.Consume(ETokenType.Comma);
+                tokens.SkipWhitespace();
+            }
+            else
             {
                 break;
             }
-
-            var identifierToken = tokens.Consume(ETokenType.Identifier);
-            identifiers.Add(new IdentifierNode(identifierToken.Value));
-
-            tokens.SkipWhitespace();
-            ConsumeOptionalComma(tokens);
-            tokens.SkipWhitespace();
         }
-
-        // Also handle the last identifier before '='
-        if (HasMoreIdentifiers(tokens) && tokens.Peek(1).Type == ETokenType.Equals)
-        {
-            var identifierToken = tokens.Consume(ETokenType.Identifier);
-            identifiers.Add(new IdentifierNode(identifierToken.Value));
-        }
-
-        ValidateIdentifiersExist(identifiers, tagStartLocation);
-        return identifiers;
+        return targets;
     }
 
     private static void ValidateEqualsToken(TokenIterator tokens, SourceLocation tagStartLocation)
