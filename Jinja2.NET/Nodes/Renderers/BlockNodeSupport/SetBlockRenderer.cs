@@ -1,4 +1,5 @@
-﻿using Jinja2.NET.Interfaces;
+﻿using System.Collections;
+using Jinja2.NET.Interfaces;
 
 namespace Jinja2.NET.Nodes.Renderers.BlockNodeSupport;
 
@@ -12,34 +13,65 @@ public class SetBlockRenderer : INodeRenderer
             throw new ArgumentException($"Expected Set BlockNode, got {node.GetType().Name}");
         }
 
-        var identifiers = setNode.Arguments.Take(setNode.Arguments.Count - 1).OfType<IdentifierNode>().ToList();
+        var targets = setNode.Arguments.Take(setNode.Arguments.Count - 1).ToList();
         var valueNode = setNode.Arguments.Last();
         var value = renderer.Visit(valueNode);
 
-        foreach (var identifier in identifiers)
+        foreach (var target in targets)
         {
-            var currentScope = renderer.ScopeManager.CurrentScope();
+            if (target is IdentifierNode identifier)
+            {
+                var currentScope = renderer.ScopeManager.CurrentScope();
 
-            if (currentScope.ContainsKey("loop"))
-            {
-                // In a loop: set only in current scope
-                currentScope[identifier.Name] = value;
+                if (currentScope.ContainsKey("loop"))
+                {
+                    // In a loop: set only in current scope
+                    currentScope[identifier.Name] = value;
+                }
+                else if (IsAtGlobalScope(renderer.ScopeManager))
+                {
+                    // At global level: set in both
+                    currentScope[identifier.Name] = value;
+                    renderer.Context.Set(identifier.Name, value);
+                }
+                else
+                {
+                    // In an if or other block: set only in current scope
+                    currentScope[identifier.Name] = value;
+                }
             }
-            else if (IsAtGlobalScope(renderer.ScopeManager))
+            else if (target is AttributeNode attrNode)
             {
-                // At global level: set in both
-                currentScope[identifier.Name] = value;
-                renderer.Context.Set(identifier.Name, value);
-            }
-            else
-            {
-                // In an if or other block: set only in current scope
-                currentScope[identifier.Name] = value;
+                var obj = renderer.Visit(attrNode.Object);
+                if (obj == null) throw new InvalidOperationException($"Cannot set attribute '{attrNode.Attribute}' of null");
+
+                SetMember(obj, attrNode.Attribute, value);
             }
         }
 
 
         return null;
+    }
+
+    private void SetMember(object obj, string memberName, object? value)
+    {
+        if (obj is IDictionary dict)
+        {
+            dict[memberName] = value;
+            return;
+        }
+
+        // Try property
+        var type = obj.GetType();
+        var prop = type.GetProperty(memberName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
+        if (prop != null && prop.CanWrite)
+        {
+            // Simple assignment, might need type conversion if strict
+            prop.SetValue(obj, value);
+            return;
+        }
+
+        throw new InvalidOperationException($"Cannot set attribute '{memberName}' on object of type '{type.Name}'");
     }
 
     private static bool IsAtGlobalScope(IScopeManager scopeManager)

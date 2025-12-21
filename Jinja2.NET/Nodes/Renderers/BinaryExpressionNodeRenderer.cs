@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using Jinja2.NET.Interfaces;
 
 namespace Jinja2.NET.Nodes.Renderers;
@@ -30,7 +30,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
             "<=" => Compare(left, right) <= 0,
             ">=" => Compare(left, right) >= 0,
             "in" => In(left, right),
-            "is" => Is(left, right),
+            "is" => HandleIsOperator(left, node.Right, renderer),
             "and" => And(left, right),
             "or" => Or(left, right),
             _ => throw new InvalidOperationException($"Unsupported operator: {node.Operator}")
@@ -160,6 +160,11 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
             return false;
         }
 
+        if (right is string str && left is string s)
+        {
+            return str.Contains(s);
+        }
+
         if (right is IEnumerable enumerable)
         {
             foreach (var item in enumerable)
@@ -171,11 +176,6 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
             }
 
             return false;
-        }
-
-        if (right is string str && left is string s)
-        {
-            return str.Contains(s);
         }
 
         throw new InvalidOperationException($"Cannot perform 'in' with {left?.GetType()} and {right.GetType()}");
@@ -229,6 +229,41 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
             System.Collections.IEnumerable enumerable => enumerable.Cast<object>().Any(),
             _ => true // Non-null objects are truthy
         };
+    }
+
+    private static bool HandleIsOperator(object? left, ASTNode rightNode, IRenderer renderer)
+    {
+        // If the right side is an identifier (e.g. 'defined'), use its name as the test
+        if (rightNode is IdentifierNode idNode)
+        {
+            return Is(left, idNode.Name);
+        }
+
+        // Handle 'is not foo' where right side is a unary 'not' operator applied to an identifier
+        if (rightNode is UnaryExpressionNode unary && unary.Operator.Equals("not", StringComparison.OrdinalIgnoreCase))
+        {
+            if (unary.Operand is IdentifierNode idOperand)
+            {
+                return !Is(left, idOperand.Name);
+            }
+
+            var operandVal = renderer.Visit(unary.Operand);
+            if (operandVal is string s)
+            {
+                return !Is(left, s);
+            }
+
+            throw new InvalidOperationException($"Right operand of 'is' must be a test name, got {operandVal?.GetType()}");
+        }
+
+        // Fallback: evaluate right and expect a string test name
+        var rightVal = renderer.Visit(rightNode);
+        if (rightVal is string testName)
+        {
+            return Is(left, testName);
+        }
+
+        throw new InvalidOperationException($"Right operand of 'is' must be a test name, got {rightVal?.GetType()}");
     }
 
     private static object? Modulo(object? left, object? right)

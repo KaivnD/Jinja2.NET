@@ -14,8 +14,72 @@ public class FunctionCallNodeRenderer : INodeRenderer
         return node.FunctionName.ToLowerInvariant() switch
         {
             "loop" => HandleRecursiveLoop(node, renderer),
+            "range" => HandleRange(node, renderer),
+            "namespace" => HandleNamespace(node, renderer),
             _ => throw new NotSupportedException($"Function '{node.FunctionName}' is not supported")
         };
+    }
+
+    private object? HandleNamespace(FunctionCallNode node, IRenderer renderer)
+    {
+        var ns = new Dictionary<string, object?>();
+        
+        if (node.Arguments.Count > 0)
+        {
+             var arg = renderer.Visit(node.Arguments[0]);
+             if (arg is IDictionary dict)
+             {
+                 foreach(DictionaryEntry de in dict)
+                 {
+                     ns[de.Key.ToString()!] = de.Value;
+                 }
+             }
+        }
+
+        foreach (var kvp in node.Kwargs)
+        {
+            ns[kvp.Key] = renderer.Visit(kvp.Value);
+        }
+
+        return ns;
+    }
+
+    private object? HandleRange(FunctionCallNode node, IRenderer renderer)
+    {
+        var args = node.Arguments.Select(arg => Convert.ToInt32(renderer.Visit(arg))).ToList();
+        
+        int start = 0;
+        int stop = 0;
+        int step = 1;
+
+        if (args.Count == 1)
+        {
+            stop = args[0];
+        }
+        else if (args.Count == 2)
+        {
+            start = args[0];
+            stop = args[1];
+        }
+        else if (args.Count == 3)
+        {
+            start = args[0];
+            stop = args[1];
+            step = args[2];
+        }
+
+        if (step == 0) throw new ArgumentException("range() step argument must not be zero");
+
+        var result = new List<int>();
+        if (step > 0)
+        {
+            for (var i = start; i < stop; i += step) result.Add(i);
+        }
+        else
+        {
+            for (var i = start; i > stop; i += step) result.Add(i);
+        }
+        return result;
     }
 
     private static int CalculateInPosition(BlockNode forTemplate, bool hasRecursive)

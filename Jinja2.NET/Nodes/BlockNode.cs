@@ -1,4 +1,4 @@
-﻿using Jinja2.NET.Interfaces;
+using Jinja2.NET.Interfaces;
 using Jinja2.NET.Nodes.Renderers;
 using Jinja2.NET.Nodes.Renderers.BlockNodeSupport;
 
@@ -13,6 +13,8 @@ public class BlockNode : ASTNode, IVisitable
   public ETokenType StartMarkerType { get; set; }
   public bool TrimLeft { get; set; }
   public bool TrimRight { get; set; }
+  public bool TrimBodyLeft { get; set; }
+  public bool TrimBodyRight { get; set; }
   public bool IsLoopScoped { get; set; } 
 
     public BlockNode(string name)

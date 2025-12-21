@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Jinja2.NET.Interfaces;
 using Jinja2.NET.Nodes;
 using Jinja2.NET.Nodes.Renderers;
@@ -48,6 +48,7 @@ public class Renderer : IRenderer
         _renderers[typeof(AttributeNode)] = new AttributeNodeRenderer();
         _renderers[typeof(CommentNode)] = new CommentNodeRenderer();
         _renderers[typeof(FunctionCallNode)] = new FunctionCallNodeRenderer();
+        _renderers[typeof(MethodCallNode)] = new MethodCallNodeRenderer();
     }
 
     public string Render(TemplateNode template)

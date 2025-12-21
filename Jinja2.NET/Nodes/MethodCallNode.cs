@@ -1,16 +1,18 @@
-﻿using Jinja2.NET.Interfaces;
+using Jinja2.NET.Interfaces;
 
 namespace Jinja2.NET.Nodes;
 
-public class FunctionCallNode : ExpressionNode
+public class MethodCallNode : ExpressionNode
 {
-    public string FunctionName { get; }
+    public ExpressionNode Object { get; }
+    public string MethodName { get; }
     public List<ExpressionNode> Arguments { get; }
     public Dictionary<string, ExpressionNode> Kwargs { get; }
 
-    public FunctionCallNode(string functionName, List<ExpressionNode> arguments, Dictionary<string, ExpressionNode>? kwargs = null)
+    public MethodCallNode(ExpressionNode obj, string methodName, List<ExpressionNode> arguments, Dictionary<string, ExpressionNode>? kwargs = null)
     {
-        FunctionName = functionName ?? throw new ArgumentNullException(nameof(functionName));
+        Object = obj ?? throw new ArgumentNullException(nameof(obj));
+        MethodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
         Arguments = arguments ?? new List<ExpressionNode>();
         Kwargs = kwargs ?? new Dictionary<string, ExpressionNode>();
     }
@@ -28,13 +30,14 @@ public class FunctionCallNode : ExpressionNode
             args.AddRange(Kwargs.Select(kv => $"{kv.Key}={kv.Value}"));
         }
         var argsStr = args.Count > 0 ? string.Join(", ", args) : "";
-        return $"FunctionCallNode: {FunctionName}({argsStr})";
+        return $"MethodCallNode: {Object}.{MethodName}({argsStr})";
     }
 
     public override bool Equals(object? obj)
     {
-        if (obj is not FunctionCallNode other) return false;
-        return FunctionName == other.FunctionName &&
+        if (obj is not MethodCallNode other) return false;
+        return Object.Equals(other.Object) &&
+               MethodName == other.MethodName &&
                Arguments.SequenceEqual(other.Arguments) &&
                Kwargs.Count == other.Kwargs.Count &&
                Kwargs.All(k => other.Kwargs.ContainsKey(k.Key) && Equals(other.Kwargs[k.Key], k.Value));
@@ -42,6 +45,6 @@ public class FunctionCallNode : ExpressionNode
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(FunctionName, Arguments.Count, Kwargs.Count);
+        return HashCode.Combine(Object, MethodName, Arguments.Count, Kwargs.Count);
     }
 }
