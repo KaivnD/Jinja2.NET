@@ -11,10 +11,12 @@ public class StandardLoopProcessor : LoopProcessor
     {
         var directSetVariables = GetDirectSetVariablesPrivate(node);
         var result = new StringBuilder();
-        renderer.ScopeManager.PushScope(); // Push once for the whole loop
-        try
+
+        for (var i = 0; i < items.Count; i++)
         {
-            for (var i = 0; i < items.Count; i++)
+            // Push a fresh scope for each iteration to avoid leaking variables between iterations
+            renderer.ScopeManager.PushScope();
+            try
             {
                 SetLoopVariables(renderer, loopVarNames, items[i], items, i);
                 var loopBodyOutput = RenderLoopBody(renderer, node);
@@ -22,45 +24,34 @@ public class StandardLoopProcessor : LoopProcessor
                 {
                     result.Append(loopBodyOutput);
                 }
+
+                // After this iteration, promote any variables that should survive to the parent scope
+                var currentScope = renderer.ScopeManager.CurrentScope();
+                var parentScope = renderer.ScopeManager.ParentScope();
+
+                foreach (var variable in setVariables)
+                {
+                    if (loopVarNames.Contains(variable))
+                    {
+                        continue;
+                    }
+
+                    if (directSetVariables.Contains(variable))
+                    {
+                        continue;
+                    }
+
+                    if (currentScope.TryGetValue(variable, out var value))
+                    {
+                        parentScope[variable] = value;
+                        renderer.Context.Set(variable, value);
+                    }
+                }
             }
-
-            // After all iterations, promote variables to parent (global) scope if they were not set directly here
-            var currentScope = renderer.ScopeManager.CurrentScope();
-            var parentScope = renderer.ScopeManager.ParentScope();
-
-            Trace.WriteLine($"[DEBUG] After outer loop, x = {(currentScope.ContainsKey("x") ? currentScope["x"] : "<none>")}");
-            Trace.WriteLine($"[DEBUG] setVariables: {string.Join(",", setVariables)}");
-            Trace.WriteLine($"[DEBUG] directSetVariables: {string.Join(",", directSetVariables)}");
-
-            foreach (var variable in setVariables)
+            finally
             {
-                if (loopVarNames.Contains(variable))
-                {
-                    continue;
-                }
-
-                if (directSetVariables.Contains(variable))
-                {
-                    continue;
-                }
-
-                if (currentScope.TryGetValue(variable, out var value))
-                {
-                    // Promote into parent scope (so {{ x }} after loop sees it)
-                    parentScope[variable] = value;
-                    // Keep context in sync (optional)
-                    renderer.Context.Set(variable, value);
-                }
+                renderer.ScopeManager.PopScope();
             }
-
-            if (currentScope.ContainsKey("x"))
-            {
-                Trace.WriteLine($"[DEBUG] After outer loop, x = {currentScope["x"]}");
-            }
-        }
-        finally
-        {
-            renderer.ScopeManager.PopScope();
         }
 
         return result.ToString();

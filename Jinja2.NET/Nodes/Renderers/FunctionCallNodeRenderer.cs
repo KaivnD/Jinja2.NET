@@ -16,8 +16,21 @@ public class FunctionCallNodeRenderer : INodeRenderer
             "loop" => HandleRecursiveLoop(node, renderer),
             "range" => HandleRange(node, renderer),
             "namespace" => HandleNamespace(node, renderer),
+            "raise_exception" => HandleRaiseException(node, renderer),
             _ => throw new NotSupportedException($"Function '{node.FunctionName}' is not supported")
         };
+    }
+
+    private object? HandleRaiseException(FunctionCallNode node, IRenderer renderer)
+    {
+        if (node.Arguments.Count == 0)
+        {
+            throw new InvalidOperationException("raise_exception requires a message argument");
+        }
+
+        var msgObj = renderer.Visit(node.Arguments[0]);
+        var message = msgObj?.ToString() ?? string.Empty;
+        throw new InvalidOperationException(message);
     }
 
     private object? HandleNamespace(FunctionCallNode node, IRenderer renderer)

@@ -135,6 +135,13 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
             return false;
         }
 
+        // If both can be coerced to numbers, compare numerically to avoid
+        // double vs int boxed equality returning false (e.g. 0.0 vs 0).
+        if (TryCoerceToNumber(left, right, out var l, out var r))
+        {
+            return Math.Abs(l - r) < Double.Epsilon;
+        }
+
         return object.Equals(left, right);
     }
 

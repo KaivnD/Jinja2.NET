@@ -57,8 +57,8 @@ public class IfBlockRenderer : INodeRenderer
     {
         // Apply whitespace trimming to block children
         WhitespaceTrimmer.ApplyWhitespaceTrimming(node.Children);
-
         // Create scope that inherits from parent scope and global context
+        var setVariables = GetVariablesBeingSet(node);
         renderer.ScopeManager.PushScope();
         try
         {
@@ -88,15 +88,8 @@ public class IfBlockRenderer : INodeRenderer
                 }
             }
 
-            // Propagate variable changes back to parent scope
-            // Only propagate variables that existed in parent scope (were modified, not newly created)
-            foreach (var kvp in currentScope)
-            {
-                if (parentScope.ContainsKey(kvp.Key))
-                {
-                    parentScope[kvp.Key] = kvp.Value;
-                }
-            }
+            // Propagate variable changes back to parent scope for variables created via `set`
+            renderer.ScopeManager.PropagateVariablesToParent(renderer.Context, string.Empty, setVariables);
         }
         finally
         {
@@ -106,6 +99,7 @@ public class IfBlockRenderer : INodeRenderer
 
     private void RenderElseOrElifBlocks(IRenderer renderer, BlockNode node, StringBuilder result)
     {
+        var setVariables = GetVariablesBeingSet(node);
         renderer.ScopeManager.PushScope();
         try
         {
@@ -147,18 +141,49 @@ public class IfBlockRenderer : INodeRenderer
                 }
             }
 
-            // Propagate variable changes back to parent scope
-            foreach (var kvp in currentScope)
-            {
-                if (parentScope.ContainsKey(kvp.Key))
-                {
-                    parentScope[kvp.Key] = kvp.Value;
-                }
-            }
+            // Propagate variable changes back to parent scope for variables created via `set`
+            renderer.ScopeManager.PropagateVariablesToParent(renderer.Context, string.Empty, setVariables);
         }
         finally
         {
             renderer.ScopeManager.PopScope();
         }
+    }
+
+    private static HashSet<string> GetVariablesBeingSet(BlockNode node)
+    {
+        var setVariables = new HashSet<string>();
+
+        void AnalyzeNode(ASTNode n)
+        {
+            if (n is BlockNode b)
+            {
+                if (b.Name == TemplateConstants.BlockNames.Set)
+                {
+                    foreach (var arg in b.Arguments.OfType<IdentifierNode>().Take(b.Arguments.Count - 1))
+                    {
+                        setVariables.Add(arg.Name);
+                    }
+                }
+
+                if (b.Children != null)
+                {
+                    foreach (var child in b.Children)
+                    {
+                        AnalyzeNode(child);
+                    }
+                }
+            }
+        }
+
+        if (node.Children != null)
+        {
+            foreach (var child in node.Children)
+            {
+                AnalyzeNode(child);
+            }
+        }
+
+        return setVariables;
     }
 }

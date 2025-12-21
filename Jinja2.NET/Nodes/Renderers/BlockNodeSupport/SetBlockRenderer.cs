@@ -27,6 +27,8 @@ public class SetBlockRenderer : INodeRenderer
                 {
                     // In a loop: set only in current scope
                     currentScope[identifier.Name] = value;
+                    // Mirror into TemplateContext as well to ensure lookups from different nested scopes
+                    renderer.Context.Set(identifier.Name, value);
                 }
                 else if (IsAtGlobalScope(renderer.ScopeManager))
                 {
@@ -38,6 +40,9 @@ public class SetBlockRenderer : INodeRenderer
                 {
                     // In an if or other block: set only in current scope
                     currentScope[identifier.Name] = value;
+                    // Also mirror to TemplateContext so that variables set inside
+                    // conditional blocks are visible to subsequent siblings.
+                    renderer.Context.Set(identifier.Name, value);
                 }
             }
             else if (target is AttributeNode attrNode)

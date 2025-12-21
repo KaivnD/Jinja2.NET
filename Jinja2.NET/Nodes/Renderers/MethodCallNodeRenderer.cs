@@ -39,6 +39,22 @@ public class MethodCallNodeRenderer : INodeRenderer
                  return str.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
              }
         }
+        // Additional Jinja-like string methods
+        if (obj is string s)
+        {
+            if (methodName.Equals("strip", StringComparison.OrdinalIgnoreCase) && args.Length == 0)
+            {
+                return s.Trim();
+            }
+            if (methodName.Equals("lstrip", StringComparison.OrdinalIgnoreCase) && args.Length == 0)
+            {
+                return s.TrimStart();
+            }
+            if (methodName.Equals("rstrip", StringComparison.OrdinalIgnoreCase) && args.Length == 0)
+            {
+                return s.TrimEnd();
+            }
+        }
 
         // General reflection
         var type = obj.GetType();
