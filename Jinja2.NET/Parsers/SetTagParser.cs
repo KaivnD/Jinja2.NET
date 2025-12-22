@@ -72,15 +72,40 @@ public class SetTagParser : ITagParser
         tokens.Consume(ETokenType.Equals);
         tokens.SkipWhitespace();
 
-        // Custom parse: stop at BlockEnd or at identifier "loop"
+        // Custom parse: stop at BlockEnd or at identifier "loop" *only if* that "loop" is followed (ignoring spaces) by BlockEnd
         var exprTokens = new List<Token>();
         while (!tokens.IsAtEnd())
         {
             var t = tokens.Peek();
-            if (t.Type == ETokenType.BlockEnd ||
-                (t.Type == ETokenType.Identifier && t.Value.Equals("loop", StringComparison.OrdinalIgnoreCase)))
+            if (t.Type == ETokenType.BlockEnd)
             {
                 break;
+            }
+
+            if (t.Type == ETokenType.Identifier && t.Value.Equals("loop", StringComparison.OrdinalIgnoreCase))
+            {
+                // Look ahead to next non-space/text token to determine if 'loop' is the trailing marker
+                int lookahead = 1;
+                Token la;
+                while (true)
+                {
+                    la = tokens.Peek(lookahead);
+                    // Treat Text tokens that are only spaces/tabs as ignorable whitespace
+                    if (la.Type == ETokenType.Text && TokenIterator.IsSpaceOrTabOnly(la.Value))
+                    {
+                        lookahead++;
+                        continue;
+                    }
+                    break;
+                }
+
+                if (la.Type == ETokenType.BlockEnd)
+                {
+                    // 'loop' is the trailing loop-scope marker -> stop collecting expression tokens
+                    break;
+                }
+
+                // Otherwise 'loop' is part of the expression (e.g. loop.index0) => consume as normal
             }
 
             exprTokens.Add(tokens.Consume(t.Type));
@@ -95,19 +120,19 @@ public class SetTagParser : ITagParser
     {
         var targets = new List<ExpressionNode>();
         tokens.SkipWhitespace();
-        
+
         // Consume the 'set' keyword
         if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Identifier)
         {
             tokens.Consume(ETokenType.Identifier);
         }
-        
+
         while (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.Equals && tokens.Peek().Type != ETokenType.BlockEnd)
         {
             // Parse target expression (identifier or attribute access)
             var target = expressionParser.Parse(tokens, ETokenType.Comma);
             targets.Add(target);
-             
+
             tokens.SkipWhitespace();
             if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Comma)
             {

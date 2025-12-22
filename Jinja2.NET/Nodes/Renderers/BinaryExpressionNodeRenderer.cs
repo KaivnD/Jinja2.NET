@@ -240,34 +240,53 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
 
     private static bool HandleIsOperator(object? left, ASTNode rightNode, IRenderer renderer)
     {
+        // Support LiteralNode boolean (e.g. parsed 'false'/'true' became LiteralNode(false))
+        if (rightNode is LiteralNode lit && lit.Value is bool litBool)
+        {
+            return Is(left, litBool ? "true" : "false");
+        }
+
         // If the right side is an identifier (e.g. 'defined'), use its name as the test
         if (rightNode is IdentifierNode idNode)
         {
             return Is(left, idNode.Name);
         }
 
-        // Handle 'is not foo' where right side is a unary 'not' operator applied to an identifier
+        // Handle 'is not foo' where right side is a unary 'not' operator applied to an identifier or literal
         if (rightNode is UnaryExpressionNode unary && unary.Operator.Equals("not", StringComparison.OrdinalIgnoreCase))
         {
+            // operand is identifier -> invert test
             if (unary.Operand is IdentifierNode idOperand)
             {
                 return !Is(left, idOperand.Name);
             }
 
+            // operand evaluates to string test name
             var operandVal = renderer.Visit(unary.Operand);
             if (operandVal is string s)
             {
                 return !Is(left, s);
             }
 
+            // operand evaluates to boolean literal -> invert corresponding test
+            if (operandVal is bool b)
+            {
+                return !Is(left, b ? "true" : "false");
+            }
+
             throw new InvalidOperationException($"Right operand of 'is' must be a test name, got {operandVal?.GetType()}");
         }
 
-        // Fallback: evaluate right and expect a string test name
+        // Fallback: evaluate right and accept string or boolean
         var rightVal = renderer.Visit(rightNode);
         if (rightVal is string testName)
         {
             return Is(left, testName);
+        }
+
+        if (rightVal is bool boolVal)
+        {
+            return Is(left, boolVal ? "true" : "false");
         }
 
         throw new InvalidOperationException($"Right operand of 'is' must be a test name, got {rightVal?.GetType()}");
