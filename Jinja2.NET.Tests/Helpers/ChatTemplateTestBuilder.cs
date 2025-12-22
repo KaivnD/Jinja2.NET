@@ -19,19 +19,19 @@ public static class ChatTemplateTestBuilder
 {
     public static readonly ReadOnlyDictionary<string, TemplateConfig> DefaultTemplates;
     public static readonly ReadOnlyDictionary<string, TemplateConfig> CustomTemplates;
-    public static TemplateConfig GetTemplateConfig(string group, string name)
+    public static TemplateConfig GetTemplateConfig(string name)
     {
-        if (group == "default" && DefaultTemplates.TryGetValue(name, out TemplateConfig? value))
+        if (DefaultTemplates.TryGetValue(name, out TemplateConfig? value))
         {
             return value;
         }
-        else if (group == "custom" && CustomTemplates.TryGetValue(name, out TemplateConfig? value1))
+        else if (CustomTemplates.TryGetValue(name, out TemplateConfig? value1))
         {
             return value1;
         }
         else
         {
-            throw new ArgumentException($"Template config not found for group '{group}' and name '{name}'");
+            throw new ArgumentException($"Template config not found for name '{name}'");
         }
     }
 
