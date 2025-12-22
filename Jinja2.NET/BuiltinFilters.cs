@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Globalization;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace Jinja2.NET;
 
@@ -18,10 +20,17 @@ public static class BuiltinFilters
     public const string SortFilter = "sort";
     public const string FirstFilter = "first";
     public const string LastFilter = "last";
+    public const string ToJsonFilter = "tojson";
 
     // Other magic values
     private const string EmptyString = "";
-
+    static JsonSerializerOptions jsonOptions = new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // 核心：不转义非ASCII字符
+        WriteIndented = false, // 格式化输出
+        AllowTrailingCommas = true // 可选：允许末尾逗号，增强兼容性
+    };
     private static readonly Dictionary<string, Func<object?, object[], object>> _filters =
         new()
         {
@@ -37,7 +46,8 @@ public static class BuiltinFilters
             [ReverseFilter] = (value, args) => DoReverseFilter(value),
             [SortFilter] = (value, args) => DoSortFilter(value),
             [FirstFilter] = (value, args) => DoFirstFilter(value),
-            [LastFilter] = (value, args) => DoLastFilter(value)
+            [LastFilter] = (value, args) => DoLastFilter(value),
+            [ToJsonFilter] = (value, args) => JsonSerializer.Serialize(value, jsonOptions)
         };
 
     public static object ApplyFilter(string filterName, object? value, object[] arguments)

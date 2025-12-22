@@ -54,6 +54,30 @@ public class MethodCallNodeRenderer : INodeRenderer
             {
                 return s.TrimEnd();
             }
+            if (methodName.Equals("title", StringComparison.OrdinalIgnoreCase) && args.Length == 0)
+            {
+                try
+                {
+                    return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(s.ToLower());
+                }
+                catch
+                {
+                    return s;
+                }
+            }
+            if (methodName.Equals("upper", StringComparison.OrdinalIgnoreCase) && args.Length == 0)
+            {
+                return s.ToUpper();
+            }
+            if (methodName.Equals("lower", StringComparison.OrdinalIgnoreCase) && args.Length == 0)
+            {
+                return s.ToLower();
+            }
+            if (methodName.Equals("capitalize", StringComparison.OrdinalIgnoreCase) && args.Length == 0)
+            {
+                if (s.Length == 0) return s;
+                return char.ToUpper(s[0]) + (s.Length > 1 ? s.Substring(1) : string.Empty);
+            }
         }
 
         // General reflection

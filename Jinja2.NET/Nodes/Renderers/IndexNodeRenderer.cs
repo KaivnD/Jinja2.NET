@@ -171,22 +171,47 @@ public class IndexNodeRenderer : INodeRenderer
 
         if (target is IList listSingle && index is int idx)
         {
-            return listSingle[idx];
+            // Support negative indices (Python-like)
+            var actual = idx;
+            if (actual < 0)
+            {
+                actual = listSingle.Count + actual;
+            }
+            if (actual < 0 || actual >= listSingle.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index), "Index was out of range.");
+            }
+            return listSingle[actual];
         }
 
         if (target is Array arrSingle)
         {
             if (index is int arrIdx)
             {
-                return arrSingle.GetValue(arrIdx);
+                var actual = arrIdx;
+                if (actual < 0)
+                {
+                    actual = arrSingle.Length + actual;
+                }
+                if (actual < 0 || actual >= arrSingle.Length)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(index), "Index was out of range.");
+                }
+                return arrSingle.GetValue(actual);
             }
 
             throw new InvalidOperationException($"Array index must be int, got {index?.GetType().Name}");
         }
 
-        if (target is string strSingle && index is int strIdx && strIdx >= 0 && strIdx < strSingle.Length)
+        if (target is string strSingle && index is int strIdx)
         {
-            return strSingle[strIdx].ToString();
+            var actual = strIdx;
+            if (actual < 0) actual = strSingle.Length + actual;
+            if (actual >= 0 && actual < strSingle.Length)
+            {
+                return strSingle[actual].ToString();
+            }
+            throw new ArgumentOutOfRangeException(nameof(index), "Index was out of range.");
         }
 
         throw new InvalidOperationException($"Cannot index into type '{target?.GetType().Name}' with '{index}'.");
