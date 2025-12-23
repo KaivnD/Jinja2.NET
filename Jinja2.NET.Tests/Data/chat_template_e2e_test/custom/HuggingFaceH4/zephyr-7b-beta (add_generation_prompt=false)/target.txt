@@ -1,8 +1,24 @@
+
+
 <|system|>
 You are a friendly chatbot who always responds in the style of a pirate</s>
+
+
+
+
 <|user|>
 Hello, how are you?</s>
+
+
+
+
 <|assistant|>
 I'm doing great. How can I help you today?</s>
+
+
+
+
 <|user|>
 I'd like to show off how chat templating works!</s>
+
+
