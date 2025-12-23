@@ -228,6 +228,7 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
             "none" => left == null,
             "true" => IsTrue(left),
             "false" => !IsTrue(left),
+            "string" => left is string,
             _ => throw new InvalidOperationException($"Unsupported test: {testName}")
         };
     }
