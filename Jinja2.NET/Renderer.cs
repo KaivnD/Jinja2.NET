@@ -45,6 +45,7 @@ public class Renderer : IRenderer
         _renderers[typeof(MapLiteralNode)] = new MapLiteralNodeRenderer();
         _renderers[typeof(UnaryExpressionNode)] = new UnaryExpressionNodeRenderer();
         _renderers[typeof(BinaryExpressionNode)] = new BinaryExpressionNodeRenderer();
+        _renderers[typeof(Nodes.ConditionalExpressionNode)] = new Nodes.Renderers.ConditionalExpressionNodeRenderer();
         _renderers[typeof(IndexNode)] = new IndexNodeRenderer();
         _renderers[typeof(AttributeNode)] = new AttributeNodeRenderer();
         _renderers[typeof(CommentNode)] = new CommentNodeRenderer();

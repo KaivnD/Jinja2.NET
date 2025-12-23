@@ -39,6 +39,69 @@ public class MethodCallNodeRenderer : INodeRenderer
                  return str.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
              }
         }
+        
+        // Special handling for IDictionary 'get' to emulate Python dict.get
+        if ((obj is System.Collections.IDictionary dict) && methodName.Equals("get", StringComparison.OrdinalIgnoreCase))
+        {
+            if (args.Length == 0)
+            {
+                throw new InvalidOperationException("dict.get requires at least one argument");
+            }
+
+            var key = args[0];
+            object? def = null;
+            if (args.Length > 1)
+            {
+                def = args[1];
+            }
+
+            // IDictionary may enumerate keys of different types; try direct access first
+            if (dict.Contains(key))
+            {
+                return dict[key];
+            }
+
+            // Try string key lookup fallback
+            if (key is string ks)
+            {
+                foreach (var k in dict.Keys)
+                {
+                    if (k is string sk && sk == ks)
+                    {
+                        return dict[k];
+                    }
+                }
+            }
+
+            return def;
+        }
+        
+        // IDictionary keys/values/items
+        if (obj is System.Collections.IDictionary dict2)
+        {
+            if (methodName.Equals("keys", StringComparison.OrdinalIgnoreCase) && args.Length == 0)
+            {
+                var list = new List<object?>();
+                foreach (var k in dict2.Keys) list.Add(k);
+                return list;
+            }
+            if (methodName.Equals("values", StringComparison.OrdinalIgnoreCase) && args.Length == 0)
+            {
+                var list = new List<object?>();
+                foreach (var v in dict2.Values) list.Add(v);
+                return list;
+            }
+            if (methodName.Equals("items", StringComparison.OrdinalIgnoreCase) && args.Length == 0)
+            {
+                var list = new List<object?>();
+                foreach (var k in dict2.Keys)
+                {
+                    var v = dict2[k!];
+                    list.Add(new KeyValuePair<object?, object?>(k, v));
+                }
+                return list;
+            }
+        }
         // Additional Jinja-like string methods
         if (obj is string s)
         {
