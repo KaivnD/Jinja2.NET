@@ -40,13 +40,36 @@ public abstract class BaseTagParser : ITagParser
         return new InvalidOperationException($"{message} at {location.Line}:{location.Column}");
     }
 
+    protected InvalidOperationException CreateParseException(string message, Token token)
+    {
+        return new InvalidOperationException($"{message} at {token.Line}:{token.Column}");
+    }
+
     protected void ParseBlockBody(TokenIterator tokens, IBlockBodyParser blockBodyParser, BlockNode block,
         params string[] terminators)
     {
         block.Children.AddRange(blockBodyParser.Parse(tokens, terminators));
+        // If we've reached EOF without encountering the expected terminator, raise a parse error
+        if (tokens.IsAtEnd() || tokens.Peek().Type == ETokenType.EOF)
+        {
+            if (terminators.Length > 0)
+            {
+                // For else/elif blocks nested inside an if, prefer reporting the parent 'if' as unclosed
+                var displayName = block.Name;
+                if ((string.Equals(block.Name, TemplateConstants.BlockNames.Else, StringComparison.OrdinalIgnoreCase)
+                     || string.Equals(block.Name, TemplateConstants.BlockNames.Elif, StringComparison.OrdinalIgnoreCase))
+                    && terminators.Any(t => string.Equals(t, TemplateConstants.BlockNames.EndIf, StringComparison.OrdinalIgnoreCase)))
+                {
+                    displayName = TemplateConstants.BlockNames.If;
+                }
+
+                throw CreateParseException($"Unclosed '{displayName}' block", tokens.CurrentLocation);
+            }
+            return;
+        }
 
         // Check for correct end tag or valid continuation
-        if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.BlockStart)
+        if (tokens.Peek().Type == ETokenType.BlockStart)
         {
             // Look ahead to the identifier after BlockStart
             var lookahead = tokens.Peek(1);
@@ -57,6 +80,20 @@ public abstract class BaseTagParser : ITagParser
                 if (terminators.Length > 0 &&
                     !terminators.Any(t => string.Equals(t, found, StringComparison.OrdinalIgnoreCase)))
                 {
+                    // If the expected terminator set includes 'endif', prefer the message "Expected 'endif' block"
+                    if (terminators.Any(t => string.Equals(t, TemplateConstants.BlockNames.EndIf, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        var displayName = block.Name;
+                        if ((string.Equals(block.Name, TemplateConstants.BlockNames.Else, StringComparison.OrdinalIgnoreCase)
+                             || string.Equals(block.Name, TemplateConstants.BlockNames.Elif, StringComparison.OrdinalIgnoreCase))
+                            && terminators.Any(t => string.Equals(t, TemplateConstants.BlockNames.EndIf, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            displayName = TemplateConstants.BlockNames.If;
+                        }
+
+                        throw CreateParseException($"Expected '{TemplateConstants.BlockNames.EndIf}' block; Unclosed '{displayName}' block", lookahead);
+                    }
+
                     throw new InvalidOperationException(
                         $"Expected one of [{string.Join(", ", terminators)}] block, but found '{found}' at {lookahead.Line}:{lookahead.Column}");
                 }

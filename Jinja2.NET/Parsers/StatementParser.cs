@@ -118,15 +118,47 @@ public class StatementParser : IStatementParser
             }
             else
             {
-                // Unknown block: consume block end and return a generic BlockNode
+                // Unknown block: support implicit function-call statements like `name(args...)`
                 tokens.SkipWhitespace();
-                tokens.Consume(ETokenType.BlockEnd);
-                node = new BlockNode(blockName)
+                if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.LeftParen)
                 {
-                    StartMarkerType = startToken.Type,
-                    EndMarkerType = ETokenType.BlockEnd,
-                    TrimLeft = trimLeft
-                };
+                    // We consumed the identifier already; build an expression token list starting with that identifier
+                    var exprTokens = new List<Token> { identifierToken };
+                    // Collect tokens up to but not including the BlockEnd
+                    while (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.BlockEnd)
+                    {
+                        exprTokens.Add(tokens.Consume(tokens.Peek().Type));
+                    }
+
+                    // Consume the BlockEnd token
+                    var endToken = tokens.Consume(ETokenType.BlockEnd);
+
+                    // Parse the collected tokens as an expression (should result in a FunctionCallNode)
+                    var exprIterator = new TokenIterator(exprTokens);
+                    var expression = _expressionParser.Parse(exprIterator);
+
+                    var varNode = new VariableNode(expression)
+                    {
+                        StartMarkerType = startToken.Type,
+                        EndMarkerType = endToken.Type,
+                        TrimLeft = false,
+                        TrimRight = endToken.TrimRight
+                    };
+
+                    node = varNode;
+                }
+                else
+                {
+                    // Unknown block: consume block end and return a generic BlockNode
+                    tokens.SkipWhitespace();
+                    tokens.Consume(ETokenType.BlockEnd);
+                    node = new BlockNode(blockName)
+                    {
+                        StartMarkerType = startToken.Type,
+                        EndMarkerType = ETokenType.BlockEnd,
+                        TrimLeft = trimLeft
+                    };
+                }
             }
         }
 

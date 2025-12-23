@@ -13,6 +13,7 @@ public class BlockRendererFactory
         {
             { TemplateConstants.BlockNames.For, new ForBlockRenderer() },
             { TemplateConstants.BlockNames.If, new IfBlockRenderer() },
+            { TemplateConstants.BlockNames.Macro, new MacroBlockRenderer() },
             { TemplateConstants.BlockNames.Raw, new RawBlockRenderer() },
             { TemplateConstants.BlockNames.Set, new SetBlockRenderer() }
         };

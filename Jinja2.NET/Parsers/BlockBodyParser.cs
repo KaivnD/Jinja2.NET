@@ -17,8 +17,7 @@ public class BlockBodyParser : IBlockBodyParser
         var nodes = new List<ASTNode>();
         while (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.EOF && !IsBlockEnd(tokens, stopKeywords))
         {
-            tokens.SkipWhitespace();
-            // In BlockBodyParser.cs
+            // Do not aggressively skip text-only whitespace here — keep significant spaces in block bodies
             var (node, startMarkerType) = _statementParser.Parse(tokens, stopKeywords);
             if (node != null)
             {
@@ -34,19 +33,37 @@ public class BlockBodyParser : IBlockBodyParser
 
     private bool IsBlockEnd(TokenIterator tokens, string[] endBlockNames)
     {
-        tokens.SkipWhitespace();
+        // Look ahead for a BlockStart while preserving whitespace Text tokens
         if (tokens.IsAtEnd() || tokens.Peek().Type == ETokenType.EOF)
         {
             return true;
         }
 
-        var peek = tokens.Peek();
-        if (peek.Type == ETokenType.BlockStart)
+        var lookahead = 0;
+        while (!tokens.IsAtEnd() && tokens.Peek(lookahead).Type == ETokenType.Text && TokenIterator.IsSpaceOrTabOnly(tokens.Peek(lookahead).Value))
         {
-            var next = tokens.Peek(1);
-            if (next.Type == ETokenType.Identifier && endBlockNames.Contains(next.Value.ToLower()))
+            lookahead++;
+        }
+
+        var candidate = tokens.Peek(lookahead);
+        if (candidate.Type == ETokenType.BlockStart)
+        {
+            var next = tokens.Peek(lookahead + 1);
+            if (next.Type == ETokenType.Identifier)
             {
-                return true;
+                var lower = next.Value.ToLower();
+                // If the identifier matches one of the stop keywords, this is a block end
+                if (endBlockNames.Contains(lower))
+                {
+                    return true;
+                }
+
+                // Also treat any identifier that looks like an end-tag (starts with 'end') as a potential end
+                // so the enclosing parser can validate and raise a helpful error for invalid end tags.
+                if (lower.StartsWith("end"))
+                {
+                    return true;
+                }
             }
         }
 

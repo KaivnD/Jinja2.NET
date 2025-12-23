@@ -11,6 +11,8 @@ public static class TemplateConstants
         public const string Elif = "elif";
         public const string Else = "else";
         public const string Set = "set";
+        public const string Macro = "macro";
+        public const string EndMacro = "endmacro";
         public const string Raw = "raw";
         public const string EndRaw = "endraw";
     }

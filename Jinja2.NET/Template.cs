@@ -19,6 +19,7 @@ public class Template
     private readonly Func<TemplateContext, IRenderer> _rendererFactory;
     private readonly string _source;
     private readonly IReadOnlyList<Token> _tokens;
+    private readonly HashSet<string> _definedMacros = new(StringComparer.OrdinalIgnoreCase);
 
     // Properties for debugging and introspection
     public TemplateNode Ast => _ast;
@@ -50,7 +51,39 @@ public class Template
             _ast = result.Node;
         }
 
+        // Collect macro names defined in the template for render-time checks
+        if (_ast != null)
+        {
+            CollectDefinedMacros(_ast, _definedMacros);
+        }
+
         _tokens = result.Tokens;
+    }
+
+    private static void CollectDefinedMacros(TemplateNode node, HashSet<string> set)
+    {
+        foreach (var child in node.Children)
+        {
+            if (child is BlockNode bn && bn.Name == TemplateConstants.BlockNames.Macro)
+            {
+                if (bn.Arguments.Count > 0 && bn.Arguments[0] is LiteralNode ln)
+                {
+                    var name = ln.Value?.ToString();
+                    if (!string.IsNullOrWhiteSpace(name)) set.Add(name);
+                }
+            }
+
+            if (child is TemplateNode tn)
+            {
+                CollectDefinedMacros(tn, set);
+            }
+            else if (child is BlockNode bnode)
+            {
+                // Recurse into block children
+                var temp = new TemplateNode(bnode.Children);
+                CollectDefinedMacros(temp, set);
+            }
+        }
     }
 
     // Convenience constructor for simple cases
@@ -181,6 +214,9 @@ public class Template
         }
 
         var renderer = _rendererFactory(templateContext);
+
+        // Expose defined macros to the renderer via the context
+        templateContext.Set("__defined_macros__", _definedMacros);
 
         if (renderer is Renderer concreteRenderer)
         {

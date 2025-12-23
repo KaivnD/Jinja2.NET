@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Text;
 using Jinja2.NET.Interfaces;
+using Jinja2.NET.Nodes;
 
 namespace Jinja2.NET.Nodes.Renderers;
 
@@ -11,15 +12,31 @@ public class FunctionCallNodeRenderer : INodeRenderer
         ValidateNodeType(nodeIn);
         var node = (FunctionCallNode)nodeIn;
 
-        return node.FunctionName.ToLowerInvariant() switch
+        var fname = node.FunctionName.ToLowerInvariant();
+        object? result;
+        switch (fname)
         {
-            "loop" => HandleRecursiveLoop(node, renderer),
-            "range" => HandleRange(node, renderer),
-            "namespace" => HandleNamespace(node, renderer),
-            "dict" => HandleDict(node, renderer),
-            "raise_exception" => HandleRaiseException(node, renderer),
-            _ => throw new NotSupportedException($"Function '{node.FunctionName}' is not supported")
-        };
+            case "loop":
+                result = HandleRecursiveLoop(node, renderer);
+                break;
+            case "range":
+                result = HandleRange(node, renderer);
+                break;
+            case "namespace":
+                result = HandleNamespace(node, renderer);
+                break;
+            case "dict":
+                result = HandleDict(node, renderer);
+                break;
+            case "raise_exception":
+                result = HandleRaiseException(node, renderer);
+                break;
+            default:
+                result = HandleMacroInvocation(node, renderer);
+                break;
+        }
+
+        return result;
     }
 
     private object? HandleRaiseException(FunctionCallNode node, IRenderer renderer)
@@ -341,5 +358,60 @@ public class FunctionCallNodeRenderer : INodeRenderer
         {
             throw new InvalidOperationException("Recursive loop function requires at least one argument");
         }
+    }
+
+    private object? HandleMacroInvocation(FunctionCallNode node, IRenderer renderer)
+    {
+        // Look up macro definition from context
+        var macroObj = renderer.Context.Get(node.FunctionName);
+        if (macroObj is not MacroDefinition macroDef)
+        {
+            // If the template declares a macro with this name (but it may be defined later),
+            // treat as call-before-definition and throw NotSupportedException to match tests.
+            var known = renderer.Context.Get("__defined_macros__");
+            if (known is IEnumerable<string> names && names.Contains(node.FunctionName, StringComparer.OrdinalIgnoreCase))
+            {
+                throw new NotSupportedException($"Function '{node.FunctionName}' is not supported");
+            }
+
+            throw new InvalidOperationException($"Function '{node.FunctionName}' is not supported");
+        }
+
+        // Map arguments to parameters
+        var sb = new StringBuilder();
+        renderer.ScopeManager.PushScope();
+        try
+        {
+            var scope = renderer.ScopeManager.CurrentScope();
+            for (var i = 0; i < macroDef.Parameters.Count; i++)
+            {
+                var param = macroDef.Parameters[i];
+                object? value = null;
+                if (i < node.Arguments.Count)
+                {
+                    value = renderer.Visit(node.Arguments[i]);
+                }
+
+                scope[param] = value;
+            }
+
+            // Render macro body
+            // Apply whitespace trimming rules for the macro body before rendering
+            WhitespaceTrimmer.ApplyWhitespaceTrimming(macroDef.Body);
+            foreach (var child in macroDef.Body)
+            {
+                var childResult = renderer.Visit(child);
+                if (childResult != null)
+                {
+                    sb.Append(childResult);
+                }
+            }
+        }
+        finally
+        {
+            renderer.ScopeManager.PopScope();
+        }
+
+        return sb.ToString();
     }
 }

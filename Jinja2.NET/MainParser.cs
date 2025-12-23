@@ -235,6 +235,9 @@ public class MainParser
         builder
             .RegisterTag(TemplateConstants.BlockNames.If, () => new ConditionalBlockParser())
             .RegisterTag(TemplateConstants.BlockNames.For, () => new ForTagParser())
+            .RegisterTag(TemplateConstants.BlockNames.Macro, () => new MacroTagParser())
+            .RegisterTag(TemplateConstants.BlockNames.EndMacro,
+                () => new EndTagParser(TemplateConstants.BlockNames.EndMacro))
             .RegisterTag(TemplateConstants.BlockNames.Raw, () => new RawTagParser())
             .RegisterTag(TemplateConstants.BlockNames.Set, () => new SetTagParser())
             .RegisterTag(TemplateConstants.BlockNames.Elif, () => new ElifTagParser())
