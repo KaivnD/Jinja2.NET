@@ -177,29 +177,31 @@ public class ExpressionParser : IExpressionParser
                 }
             }
 
-            // Ternary conditional expression: <true_expr> if <condition> else <false_expr>
+            // Ternary conditional expression: <true_expr> if <condition> [else <false_expr>]
             if (token.Type == ETokenType.Identifier && token.Value.Equals("if", StringComparison.OrdinalIgnoreCase))
             {
                 // consume 'if'
                 tokens.Consume(token.Type);
                 tokens.SkipWhitespace();
 
-                // Parse condition (will stop before the 'else' identifier)
+                // Parse condition (will stop before the optional 'else' identifier)
                 var condition = ParseBinary(tokens, /*parentPrecedence*/ 0, stopTokenType);
                 tokens.SkipWhitespace();
 
                 var nextTok = tokens.Peek();
-                if (!(nextTok.Type == ETokenType.Identifier && nextTok.Value.Equals("else", StringComparison.OrdinalIgnoreCase)))
+                ExpressionNode falseExpr;
+                if (nextTok.Type == ETokenType.Identifier && nextTok.Value.Equals("else", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidOperationException($"Expected 'else' after 'if' in conditional expression at {nextTok.Line}:{nextTok.Column}");
+                    // consume 'else' and parse false branch
+                    tokens.Consume(nextTok.Type);
+                    tokens.SkipWhitespace();
+                    falseExpr = ParseBinary(tokens, /*parentPrecedence*/ 0, stopTokenType);
                 }
-
-                // consume 'else'
-                tokens.Consume(nextTok.Type);
-                tokens.SkipWhitespace();
-
-                // Parse false branch
-                var falseExpr = ParseBinary(tokens, /*parentPrecedence*/ 0, stopTokenType);
+                else
+                {
+                    // allow omitted 'else' — default false branch is empty string
+                    falseExpr = new Nodes.LiteralNode("");
+                }
 
                 left = new Nodes.ConditionalExpressionNode(condition, left, falseExpr);
                 continue;
