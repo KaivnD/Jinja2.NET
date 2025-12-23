@@ -1,4 +1,21 @@
-<|begin_of_text|><|start_header_id|>user<|end_header_id|>
+<|begin_of_text|>
 
-<|image|>If I had to write a haiku for this one, it would be: <|eot_id|><|start_header_id|>assistant<|end_header_id|>
+    
+
+
+
+
+        
+    
+    
+<|start_header_id|>user<|end_header_id|>
+
+<|image|>
+            If I had to write a haiku for this one, it would be: 
+                
+            
+        <|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>
+
+
 

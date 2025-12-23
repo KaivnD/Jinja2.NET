@@ -47,8 +47,8 @@ public class ChatTemplateTests
     [InlineData("maywell/Synatra-Mixtral-8x7B")]
     [InlineData("deepseek-ai/deepseek-coder-33b-instruct")]
     [InlineData("meetkai/functionary-medium-v2.2")]
-    [InlineData("fireworks-ai/firefunction-v1")] // parsing issue
-    [InlineData("maywell/PiVoT-MoE")] // parsing issue
+    [InlineData("fireworks-ai/firefunction-v1")]
+    [InlineData("maywell/PiVoT-MoE")]
     [InlineData("CohereForAI/c4ai-command-r-v01")] // call method items from dictionary issue
     [InlineData("CohereForAI/c4ai-command-r-v01 (JSON Schema)")] // macro feature
     [InlineData("mistralai/Mistral-7B-Instruct-v0.3 (JSON Schema)")] // parsing issue
@@ -64,7 +64,7 @@ public class ChatTemplateTests
     [InlineData("CohereLabs/c4ai-command-a-03-2025")] // macro feature
     [InlineData("openbmb/MiniCPM3-4B")] // macro feature
     [InlineData("ai21labs/AI21-Jamba-Large-1.6")] // macro feature
-    [InlineData("meta-llama/Llama-3.2-11B-Vision-Instruct")] // parsing issue
+    [InlineData("meta-llama/Llama-3.2-11B-Vision-Instruct")]
     [InlineData("meta-llama/Llama-Guard-3-11B-Vision")]  // parsing issue
     [InlineData("HuggingFaceTB/SmolLM3-3B")] // parsing issue
     [InlineData("CohereLabs/command-a-reasoning-08-2025")] // macro feature
