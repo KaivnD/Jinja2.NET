@@ -156,6 +156,27 @@ public class ExpressionParser : IExpressionParser
         {
             tokens.SkipWhitespace();
             var token = tokens.Peek();
+
+            // Special-case: support the "not in" operator written as two identifiers
+            // e.g. "'tool_calls' not in message" should be parsed as not (left in right)
+            if (token.Type == ETokenType.Identifier && token.Value.Equals("not", StringComparison.OrdinalIgnoreCase))
+            {
+                var next = tokens.Peek(1);
+                if (next.Type == ETokenType.Identifier && next.Value.Equals("in", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Consume both 'not' and 'in'
+                    tokens.Consume(token.Type);
+                    tokens.SkipWhitespace();
+                    tokens.Consume(next.Type);
+                    tokens.SkipWhitespace();
+
+                    var rightExpr = ParseBinary(tokens, /*parentPrecedence*/ 20, stopTokenType);
+                    // Build as unary not applied to binary (left in right): not (left in right)
+                    left = new UnaryExpressionNode("not", new BinaryExpressionNode(left, "in", rightExpr));
+                    continue;
+                }
+            }
+
             var (precedence, isRightAssociative, op) = GetOperatorPrecedence(token);
             if (precedence == 0 && !token.Value.Equals("or", StringComparison.OrdinalIgnoreCase) && !token.Value.Equals("and", StringComparison.OrdinalIgnoreCase))
             {
@@ -180,7 +201,7 @@ public class ExpressionParser : IExpressionParser
     {
         tokens.SkipWhitespace();
         // 调整为调用 ParseUnary 以支持一元运算符
-        var node = ParseUnary(tokens);
+        var node = ParseUnary(tokens, stopTokenType);
         while (!tokens.IsAtEnd() && tokens.Peek().Type != stopTokenType)
         {
             tokens.SkipWhitespace();
@@ -226,16 +247,26 @@ public class ExpressionParser : IExpressionParser
         return node;
     }
 
-    protected virtual ExpressionNode ParseUnary(TokenIterator tokens)
+    protected virtual ExpressionNode ParseUnary(TokenIterator tokens, ETokenType stopTokenType)
     {
         tokens.SkipWhitespace();
         var token = tokens.Peek();
-        
-        if (token.Type == ETokenType.Minus || token.Type == ETokenType.Plus || 
-            (token.Type == ETokenType.Identifier && token.Value.Equals("not", StringComparison.OrdinalIgnoreCase)))
+
+        if (token.Type == ETokenType.Minus || token.Type == ETokenType.Plus)
         {
             tokens.Consume(token.Type);
-            var operand = ParseUnary(tokens);
+            var operand = ParseUnary(tokens, stopTokenType);
+            return new UnaryExpressionNode(token.Value, operand);
+        }
+
+        // For 'not', parse the entire following binary expression so that
+        // constructs like 'not a is defined' are parsed as 'not (a is defined)'.
+        if (token.Type == ETokenType.Identifier && token.Value.Equals("not", StringComparison.OrdinalIgnoreCase))
+        {
+            tokens.Consume(token.Type);
+            tokens.SkipWhitespace();
+            // Parse a full binary expression as the operand (allowing 'is', 'in', etc.)
+            var operand = ParseBinary(tokens, /*parentPrecedence*/ 0, stopTokenType);
             return new UnaryExpressionNode(token.Value, operand);
         }
 

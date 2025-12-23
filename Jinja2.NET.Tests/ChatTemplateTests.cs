@@ -56,7 +56,7 @@ public class ChatTemplateTests
     [InlineData("NousResearch/Hermes-2-Pro-Llama-3-8B (JSON Schema)")] // parsing issue
     [InlineData("mistralai/Mistral-Nemo-Instruct-2407")]  // parsing issue
     [InlineData("meta-llama/Llama-3.1-8B-Instruct")] // parsing issue
-    [InlineData("deepseek-ai/DeepSeek-R1")] // parsing issue
+    [InlineData("deepseek-ai/DeepSeek-R1")]
     [InlineData("MadeAgents/Hammer2.1")] // parsing issue
     [InlineData("Qwen/Qwen2.5-7B-Instruct")] // unknown
     [InlineData("Qwen/Qwen2.5-VL-7B-Instruct")] // binary operation issue
