@@ -1,8 +1,25 @@
+
+
+
+
+
+
+
+
+
 <|from|>assistant
 <|recipient|>get_current_weather
 <|content|>{
   "location": "Hanoi"
-}<|stop|>
+}
+
+
+<|stop|>
+
+
+
 <|from|>user
 <|recipient|>all
 <|content|>what's the weather like in Hanoi?
+
+

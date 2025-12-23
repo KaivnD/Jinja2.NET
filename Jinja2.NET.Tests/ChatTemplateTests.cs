@@ -46,7 +46,7 @@ public class ChatTemplateTests
     [InlineData("abacusai/Smaug-34B-v0.1")]
     [InlineData("maywell/Synatra-Mixtral-8x7B")]
     [InlineData("deepseek-ai/deepseek-coder-33b-instruct")]
-    [InlineData("meetkai/functionary-medium-v2.2")] // str differs
+    [InlineData("meetkai/functionary-medium-v2.2")]
     [InlineData("fireworks-ai/firefunction-v1")] // parsing issue
     [InlineData("maywell/PiVoT-MoE")] // parsing issue
     [InlineData("CohereForAI/c4ai-command-r-v01")] // call method items from dictionary issue

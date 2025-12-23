@@ -172,10 +172,36 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
             return str.Contains(s);
         }
 
-        if (right is IEnumerable enumerable)
+        if (right is System.Collections.IEnumerable enumerable)
         {
             foreach (var item in enumerable)
             {
+                // Non-generic IDictionary iteration yields DictionaryEntry
+                if (item is System.Collections.DictionaryEntry de)
+                {
+                    if (EqualsPrivate(left, de.Key))
+                    {
+                        return true;
+                    }
+                    continue;
+                }
+
+                // Generic dictionaries iterate KeyValuePair<TKey,TValue>
+                if (item != null)
+                {
+                    var itemType = item.GetType();
+                    if (itemType.IsGenericType && itemType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+                    {
+                        var keyProp = itemType.GetProperty("Key");
+                        var key = keyProp?.GetValue(item);
+                        if (EqualsPrivate(left, key))
+                        {
+                            return true;
+                        }
+                        continue;
+                    }
+                }
+
                 if (EqualsPrivate(left, item))
                 {
                     return true;
