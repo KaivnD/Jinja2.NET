@@ -1,0 +1,21 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "role": "user",
+      "content": "What is the capital of France?"
+    },
+    {
+      "role": "assistant",
+      "content": "<think>The user is asking for the capital of France. This is a factual question. I know this information.</think>The capital of France is Paris."
+    },
+    {
+      "role": "user",
+      "content": "What about Chile?"
+    }
+  ],
+  "add_generation_prompt": true
+}

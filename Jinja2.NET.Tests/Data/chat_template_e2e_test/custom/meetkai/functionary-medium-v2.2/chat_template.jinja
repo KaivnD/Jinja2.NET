@@ -1,0 +1,33 @@
+{#v2.2#}
+{% for message in messages %}
+{% if message['role'] == 'user' or message['role'] == 'system' %}
+{{ '<|from|>' + message['role'] + '
+<|recipient|>all
+<|content|>' + message['content'] + '
+' }}{% elif message['role'] == 'tool' %}
+{{ '<|from|>' + message['name'] + '
+<|recipient|>all
+<|content|>' + message['content'] + '
+' }}{% else %}
+{% set contain_content='no'%}
+{% if message['content'] is not none %}
+{{ '<|from|>assistant
+<|recipient|>all
+<|content|>' + message['content'] }}{% set contain_content='yes'%}
+{% endif %}
+{% if 'tool_calls' in message and message['tool_calls'] is not none %}
+{% for tool_call in message['tool_calls'] %}
+{% set prompt='<|from|>assistant
+<|recipient|>' + tool_call['function']['name'] + '
+<|content|>' + tool_call['function']['arguments'] %}
+{% if loop.index == 1 and contain_content == "no" %}
+{{ prompt }}{% else %}
+{{ '
+' + prompt}}{% endif %}
+{% endfor %}
+{% endif %}
+{{ '<|stop|>
+' }}{% endif %}
+{% endfor %}
+{% if add_generation_prompt %}{{ '<|from|>assistant
+<|recipient|>' }}{% endif %}

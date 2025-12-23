@@ -1,0 +1,24 @@
+<|im_start|>system
+You are a helpful customer support assistant. Use the supplied tools to assist the user.<|im_end|>
+<|im_start|>user
+Hi, can you tell me the delivery date for my order? The order id is 1234 and 4321.<|im_end|>
+<|im_start|>assistant
+<|tool_call_start|>
+```python
+get_delivery_date(order_id="1234")
+get_delivery_date(order_id="4321")
+```
+<|tool_call_end|>
+<|im_end|>
+<|im_start|>tool
+{"delivery_date": "2024-09-05", "order_id": "1234"}<|im_end|>
+<|im_start|>tool
+{"delivery_date": "2024-09-05", "order_id": "4321"}<|im_end|>
+<|im_start|>assistant
+<|thought_start|>
+
+I have the information you need, both orders will be delivered on the same date, 2024-09-05.
+
+<|thought_end|>
+Both your orders will be delivered on 2024-09-05.<|im_end|>
+<|im_start|>assistant

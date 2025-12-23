@@ -1,0 +1,20 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "What has Man always dreamed of?"
+    }
+  ],
+  "documents": [
+    {
+      "heading": "The Moon: Our Age-Old Foe",
+      "body": "Man has always dreamed of destroying the moon. In this essay, I shall..."
+    },
+    {
+      "heading": "Love is all you need",
+      "body": "Man's dream has always been to find love. This profound lesson..."
+    }
+  ],
+  "add_generation_prompt": true,
+  "bos_token": "<BOS_TOKEN>"
+}

@@ -1,0 +1,18 @@
+<|im_start|>system
+## Metadata
+
+Knowledge Cutoff Date: June 2025
+Today Date: 10 July 2025
+Reasoning Mode: /think
+
+## Custom Instructions
+
+You are a helpful assistant.
+
+<|im_start|>user
+What is the capital of France?<|im_end|>
+<|im_start|>assistant
+<think>The user is asking for the capital of France. This is a factual question. I know this information.</think>The capital of France is Paris.<|im_end|>
+<|im_start|>user
+What about Chile?<|im_end|>
+<|im_start|>assistant

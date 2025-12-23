@@ -3,7 +3,10 @@
  * original file: https://github.com/huggingface/huggingface.js/blob/main/packages/jinja/test/e2e.test.js
  */
 
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -14,6 +17,7 @@ public class TemplateConfig
     public string ChatTemplate { get; set; }
     public Dictionary<string, object> Data { get; set; }
     public string Target { get; set; }
+    public string Location { get; set; }
 }
 public static class ChatTemplateTestBuilder
 {
@@ -37,34 +41,74 @@ public static class ChatTemplateTestBuilder
 
     static ChatTemplateTestBuilder()
     {
-        var location = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "Data", "chat_template_e2e_test.json"));
-        var jsonString = File.ReadAllText(location);
-        var root = JsonNode.Parse(jsonString)!.AsObject();
+        // 首先尝试从目录结构加载（Data/chat_template_e2e_test/{default,custom}/{name}）
+        var baseDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "Data", "chat_template_e2e_test"));
         var defaultTemplates = new Dictionary<string, TemplateConfig>();
         var customTemplates = new Dictionary<string, TemplateConfig>();
 
-        foreach (var (key, value) in root["default"]!.AsObject())
+        if (Directory.Exists(baseDir))
         {
-            defaultTemplates[key] = ParseTemplateConfig(value!.AsObject());
-        }
+            var defaultDir = Path.Combine(baseDir, "default");
+            var customDir = Path.Combine(baseDir, "custom");
 
-        foreach (var (key, value) in root["custom"]!.AsObject())
-        {
-            customTemplates[key] = ParseTemplateConfig(value!.AsObject());
-        }
+            CollectTemplatesRecursive(defaultDir, defaultDir, defaultTemplates);
+            CollectTemplatesRecursive(customDir, customDir, customTemplates);
 
-        DefaultTemplates = new ReadOnlyDictionary<string, TemplateConfig>(defaultTemplates);
-        CustomTemplates = new ReadOnlyDictionary<string, TemplateConfig>(customTemplates);
+            DefaultTemplates = new ReadOnlyDictionary<string, TemplateConfig>(defaultTemplates);
+            CustomTemplates = new ReadOnlyDictionary<string, TemplateConfig>(customTemplates);
+            return;
+        }
     }
 
-    static TemplateConfig ParseTemplateConfig(JsonObject templateObj)
+    static TemplateConfig ParseTemplateConfigFromDirectory(string dir)
     {
+        var chatTemplatePathJinja = Path.Combine(dir, "chat_template.jinja");
+        var chatTemplatePathTxt = Path.Combine(dir, "chat_template.txt");
+        var chatTemplatePath = File.Exists(chatTemplatePathJinja) ? chatTemplatePathJinja : chatTemplatePathTxt;
+        var dataPath = Path.Combine(dir, "data.json");
+        var targetPath = Path.Combine(dir, "target.txt");
+
+        if (!File.Exists(chatTemplatePath))
+            throw new FileNotFoundException($"Missing chat_template in {dir}");
+        if (!File.Exists(dataPath))
+            throw new FileNotFoundException($"Missing data.json in {dir}");
+        if (!File.Exists(targetPath))
+            throw new FileNotFoundException($"Missing target.txt in {dir}");
+
+        var chatTemplate = File.ReadAllText(chatTemplatePath);
+        var dataJson = File.ReadAllText(dataPath);
+        var target = File.ReadAllText(targetPath);
+
+        var dataNode = JsonNode.Parse(dataJson)!.AsObject();
+
         return new TemplateConfig
         {
-            ChatTemplate = templateObj["chat_template"]!.GetValue<string>(),
-            Data = templateObj["data"]!.AsObject().ToDictionary()!,
-            Target = templateObj["target"]!.GetValue<string>()
+            ChatTemplate = chatTemplate,
+            Data = dataNode.ToDictionary()!,
+            Target = target,
+            Location = dir
         };
+    }
+
+    static void CollectTemplatesRecursive(string baseDir, string currentDir, Dictionary<string, TemplateConfig> outDict)
+    {
+        // if currentDir contains a template, register it
+        var hasData = File.Exists(Path.Combine(currentDir, "data.json"));
+        var hasTarget = File.Exists(Path.Combine(currentDir, "target.txt"));
+        var hasTemplate = File.Exists(Path.Combine(currentDir, "chat_template.jinja"));
+        if (hasData && hasTarget && hasTemplate)
+        {
+            var rel = Path.GetRelativePath(baseDir, currentDir).Replace(Path.DirectorySeparatorChar, '/');
+            if (string.IsNullOrEmpty(rel) || rel == ".") rel = Path.GetFileName(currentDir);
+            outDict[rel] = ParseTemplateConfigFromDirectory(currentDir);
+            return; // don't descend further into this test case dir
+        }
+
+        // otherwise, recurse into subdirectories
+        foreach (var sub in Directory.EnumerateDirectories(currentDir))
+        {
+            CollectTemplatesRecursive(baseDir, sub, outDict);
+        }
     }
 }
 

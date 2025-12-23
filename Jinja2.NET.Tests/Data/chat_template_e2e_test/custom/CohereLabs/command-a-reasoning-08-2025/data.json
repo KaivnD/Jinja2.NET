@@ -1,0 +1,11 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "How many r's are there in strawberry?"
+    }
+  ],
+  "add_generation_prompt": true,
+  "reasoning": true,
+  "bos_token": "<BOS_TOKEN>"
+}

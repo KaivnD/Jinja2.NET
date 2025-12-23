@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using System.IO;
 
 namespace Jinja2.NET.Tests;
 
@@ -72,10 +73,9 @@ public class ChatTemplateTests
         var config = ChatTemplateTestBuilder.GetTemplateConfig(m);
         var template = new Template(config.ChatTemplate);
         var result = template.Render(config.Data);
-        _output.WriteLine($"Rendered Output:");
-        _output.WriteLine(result);
-        _output.WriteLine($"Expected Target:");
-        _output.WriteLine(config.Target);
+
+        var saveResultPath = Path.Combine(config.Location, "result.txt");
+        File.WriteAllText(saveResultPath, result); // for debugging
         result.Should().Be(config.Target);
     }
 }

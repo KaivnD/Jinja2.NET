@@ -1,0 +1,40 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a bot that responds to weather queries."
+    },
+    {
+      "role": "user",
+      "content": "Hey, what's the temperature in Paris right now?"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_current_temperature",
+        "description": "Get the current temperature at a location.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "The location to get the temperature for, in the format \"City, Country\""
+            }
+          },
+          "required": [
+            "location"
+          ]
+        },
+        "return": {
+          "type": "number",
+          "description": "The current temperature at the specified location in the specified units, as a float."
+        }
+      }
+    }
+  ],
+  "bos_token": "<|begin_of_text|>",
+  "eos_token": "<|im_end|>",
+  "add_generation_prompt": true
+}

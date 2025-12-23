@@ -1,0 +1,5 @@
+<s>[INST] <<SYS>>
+You are a friendly chatbot who always responds in the style of a pirate
+<</SYS>>
+
+Hello, how are you? [/INST] I'm doing great. How can I help you today? </s><s>[INST] I'd like to show off how chat templating works! [/INST]

@@ -1,0 +1,35 @@
+{%- set message_roles = ['SYSTEM', 'FUNCTIONS', 'USER', 'ASSISTANT', 'TOOL'] -%}
+{%- set ns = namespace(seen_non_system=false, messages=messages, content='', functions=[]) -%}
+{{ bos_token }}
+{#- Basic consistency checks -#}
+{%- if not ns.messages -%}
+  {{ raise_exception('No messages') }}
+{%- endif -%}
+{%- if ns.messages[0]['role'] | upper != 'SYSTEM' -%}
+  {%- set ns.messages = [{'role': 'SYSTEM', 'content': 'You are a helpful assistant with access to functions. Use them if required.'}] + ns.messages -%}
+{%- endif -%}
+{%- if ns.messages | length < 2 or ns.messages[0]['role'] | upper != 'SYSTEM' or ns.messages[1]['role'] | upper != 'FUNCTIONS' -%}
+  {{ raise_exception('Expected either "functions" or ["system", "functions"] as the first messages') }}
+{%- endif -%}
+{%- for message in ns.messages -%}
+  {%- set role = message['role'] | upper -%}
+  {#- Validation -#}
+  {%- if role not in message_roles -%}
+    {{ raise_exception('Invalid role ' + message['role'] + '. Only ' + message_roles + ' are supported.') }}
+  {%- endif -%}
+  {%- set ns.content = message['content'] if message.get('content') else '' -%}
+  {#- Move tool calls inside the content -#}
+  {%- if 'tool_calls' in message -%}
+    {%- for call in message['tool_calls'] -%}
+      {%- set ns.content = ns.content + '<functioncall>{"name": "' + call['function']['name'] + '", "arguments": ' + call['function']['arguments'] + '}' -%}
+    {%- endfor -%}
+  {%- endif -%}
+  {%- if role == 'ASSISTANT' and '<functioncall>' not in ns.content -%}
+    {%- set ns.content = '<plain>' + ns.content -%}
+  {%- endif -%}
+  {%- if role == 'ASSISTANT' -%}
+    {%- set ns.content = ns.content + eos_token -%}
+  {%- endif -%}
+  {{ role }}: {{ ns.content }}{{ '\n\n' }}
+{%- endfor -%}
+ASSISTANT:{{ ' ' }}

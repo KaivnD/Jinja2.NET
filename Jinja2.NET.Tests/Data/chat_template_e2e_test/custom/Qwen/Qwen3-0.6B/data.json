@@ -1,0 +1,10 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Give me a short introduction to large language model."
+    }
+  ],
+  "add_generation_prompt": true,
+  "enable_thinking": true
+}

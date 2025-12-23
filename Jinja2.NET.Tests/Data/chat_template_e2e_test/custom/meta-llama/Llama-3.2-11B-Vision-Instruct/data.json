@@ -1,0 +1,18 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "image"
+        },
+        {
+          "type": "text",
+          "text": "If I had to write a haiku for this one, it would be: "
+        }
+      ]
+    }
+  ],
+  "bos_token": "<|begin_of_text|>",
+  "add_generation_prompt": true
+}

@@ -1,0 +1,19 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hi there."
+    },
+    {
+      "role": "assistant",
+      "content": "<think>The user said \"Hi there.\"</think>Hi!"
+    },
+    {
+      "role": "user",
+      "content": "Tell me a joke."
+    }
+  ],
+  "bos_token": "<｜begin▁of▁sentence｜>",
+  "eos_token": "<｜end▁of▁sentence｜>",
+  "add_generation_prompt": true
+}

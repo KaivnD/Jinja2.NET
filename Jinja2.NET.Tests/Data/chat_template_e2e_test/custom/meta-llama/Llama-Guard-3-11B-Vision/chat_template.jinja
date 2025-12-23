@@ -1,0 +1,64 @@
+{%- if messages|length % 2 == 0 -%}
+    {%- set role = 'Agent' -%}
+{%-  else -%}
+    {%-  set role = 'User' -%}
+{%-  endif -%}
+{%-  if categories is not defined -%}
+    {%-  
+        set categories = ({
+            "S1": "Violent Crimes.",
+            "S2": "Non-Violent Crimes.",
+            "S3": "Sex Crimes.",
+            "S4": "Child Exploitation.",
+            "S5": "Defamation.",
+            "S6": "Specialized Advice.",
+            "S7": "Privacy.",
+            "S8": "Intellectual Property.",
+            "S9": "Indiscriminate Weapons.",
+            "S10": "Hate.",
+            "S11": "Self-Harm.",
+            "S12": "Sexual Content.",
+            "S13": "Elections.",
+        })
+    -%}
+{%-  endif -%}
+
+{{- "<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n" -}}
+{%- set ns = namespace(contains_image=false) -%}
+{%-  for message in messages -%}
+    {%- for content in message['content'] | selectattr('type', 'equalto', 'image') -%}
+        {%- set ns.contains_image = true -%}
+    {%- endfor -%}
+{%- endfor -%}
+{%- if ns.contains_image -%}
+{{- "<|image|> "-}}
+{%- endif -%}
+{{- "Task: Check if there is unsafe content in '" + role + "' messages in conversations according our safety policy with the below categories.\n\n" -}}
+{{- "<BEGIN UNSAFE CONTENT CATEGORIES>\n"-}}
+
+{%-  for key in categories -%}
+    {%-  if key not in excluded_category_keys -%}
+        {{-key + ": " + categories[key] + "\n" -}}
+    {%-  endif -%}
+{%-  endfor -%}
+
+{{- "<END UNSAFE CONTENT CATEGORIES>\n\n"-}}
+{{- "<BEGIN CONVERSATION>\n\n"-}}
+{%-  for message in messages -%}
+    {%-  if (message['role'] == 'user') != (loop.index0 % 2 == 0) -%}
+        {{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...')-}}
+    {%-  endif -%}
+    {%-  set content = message['content'] -%}
+    {%-  if message['role'] == 'user' -%}
+        {%-  set role = 'User' -%}
+    {%-  elif message['role'] == 'assistant' -%}
+        {%-  set role = 'Agent' -%}
+    {%-  endif -%}
+    {%-  for content in message['content'] | selectattr('type', 'equalto', 'text') -%}
+{{- role + ': ' + content['text'] | trim + '\n\n'-}}
+    {%-  endfor -%}
+{%-  endfor -%}
+{{- "<END CONVERSATION>\n\n"-}}
+{{- "Provide your safety assessment for ONLY THE LAST " + role + " message in the above conversation:\n"-}}
+{{- " - First line must read 'safe' or 'unsafe'.\n"-}}
+{{- " - If unsafe, a second line must include a comma-separated list of violated categories. <|eot_id|><|start_header_id|>assistant<|end_header_id|>"-}}

@@ -1,0 +1,47 @@
+<s>SYSTEM: You are a helpful assistant with access to functions. Use them if required.
+
+FUNCTIONS: [
+    {
+        "name": "get_stock_price",
+        "description": "Get the current stock price",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "symbol": {
+                    "type": "string",
+                    "description": "The stock symbol, e.g. AAPL, GOOG"
+                }
+            },
+            "required": [
+                "symbol"
+            ]
+        }
+    },
+    {
+        "name": "check_word_anagram",
+        "description": "Check if two words are anagrams of each other",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "word1": {
+                    "type": "string",
+                    "description": "The first word"
+                },
+                "word2": {
+                    "type": "string",
+                    "description": "The second word"
+                }
+            },
+            "required": [
+                "word1",
+                "word2"
+            ]
+        }
+    }
+]
+
+SYSTEM: You are a helpful assistant with access to functions. Use them if required.
+
+USER: Hi, can you tell me the current stock price of AAPL?
+
+ASSISTANT: 

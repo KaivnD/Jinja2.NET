@@ -1,0 +1,19 @@
+{
+  "messages": [
+    {
+      "role": "functions",
+      "content": "[\n    {\n        \"name\": \"get_stock_price\",\n        \"description\": \"Get the current stock price\",\n        \"parameters\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"symbol\": {\n                    \"type\": \"string\",\n                    \"description\": \"The stock symbol, e.g. AAPL, GOOG\"\n                }\n            },\n            \"required\": [\n                \"symbol\"\n            ]\n        }\n    },\n    {\n        \"name\": \"check_word_anagram\",\n        \"description\": \"Check if two words are anagrams of each other\",\n        \"parameters\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"word1\": {\n                    \"type\": \"string\",\n                    \"description\": \"The first word\"\n                },\n                \"word2\": {\n                    \"type\": \"string\",\n                    \"description\": \"The second word\"\n                }\n            },\n            \"required\": [\n                \"word1\",\n                \"word2\"\n            ]\n        }\n    }\n]"
+    },
+    {
+      "role": "system",
+      "content": "You are a helpful assistant with access to functions. Use them if required."
+    },
+    {
+      "role": "user",
+      "content": "Hi, can you tell me the current stock price of AAPL?"
+    }
+  ],
+  "bos_token": "<s>",
+  "eos_token": "</s>",
+  "add_generation_prompt": false
+}

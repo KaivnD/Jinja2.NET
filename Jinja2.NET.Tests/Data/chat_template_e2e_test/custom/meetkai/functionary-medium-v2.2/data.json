@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_current_weather",
+            "arguments": "{\n  \"location\": \"Hanoi\"\n}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": "what's the weather like in Hanoi?"
+    }
+  ],
+  "bos_token": "<s>",
+  "eos_token": "</s>",
+  "add_generation_prompt": false
+}

@@ -1,0 +1,54 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful customer support assistant. Use the supplied tools to assist the user."
+    },
+    {
+      "role": "user",
+      "content": "Hi, can you tell me the delivery date for my order? The order id is 1234 and 4321."
+    },
+    {
+      "content": "",
+      "tool_calls": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_delivery_date",
+            "arguments": {
+              "order_id": "1234"
+            }
+          },
+          "id": "call_b4ab0b4ec4b5442e86f017fe0385e22e"
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "get_delivery_date",
+            "arguments": {
+              "order_id": "4321"
+            }
+          },
+          "id": "call_628965479dd84794bbb72ab9bdda0c39"
+        }
+      ],
+      "role": "assistant"
+    },
+    {
+      "role": "tool",
+      "content": "{\"delivery_date\": \"2024-09-05\", \"order_id\": \"1234\"}",
+      "tool_call_id": "call_b4ab0b4ec4b5442e86f017fe0385e22e"
+    },
+    {
+      "role": "tool",
+      "content": "{\"delivery_date\": \"2024-09-05\", \"order_id\": \"4321\"}",
+      "tool_call_id": "call_628965479dd84794bbb72ab9bdda0c39"
+    },
+    {
+      "content": "Both your orders will be delivered on 2024-09-05.",
+      "role": "assistant",
+      "thought": "\nI have the information you need, both orders will be delivered on the same date, 2024-09-05.\n"
+    }
+  ],
+  "add_generation_prompt": true
+}

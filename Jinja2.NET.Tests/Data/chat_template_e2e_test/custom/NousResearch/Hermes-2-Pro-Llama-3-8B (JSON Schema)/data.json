@@ -1,0 +1,36 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Fetch the stock fundamentals data for Tesla (TSLA)"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_stock_fundamentals",
+        "description": "Get fundamental data for a given stock symbol using yfinance API.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "symbol": {
+              "type": "string",
+              "description": "The stock symbol."
+            }
+          },
+          "required": [
+            "symbol"
+          ]
+        },
+        "return": {
+          "type": "object",
+          "description": "A dictionary containing fundamental data.\n\nKeys:\n    - 'symbol': The stock symbol.\n    - 'company_name': The long name of the company.\n    - 'sector': The sector to which the company belongs.\n    - 'industry': The industry to which the company belongs.\n    - 'market_cap': The market capitalization of the company.\n    - 'pe_ratio': The forward price-to-earnings ratio.\n    - 'pb_ratio': The price-to-book ratio.\n    - 'dividend_yield': The dividend yield.\n    - 'eps': The trailing earnings per share.\n    - 'beta': The beta value of the stock.\n    - '52_week_high': The 52-week high price of the stock.\n    - '52_week_low': The 52-week low price of the stock."
+        }
+      }
+    }
+  ],
+  "bos_token": "<|begin_of_text|>",
+  "eos_token": "<|im_end|>",
+  "add_generation_prompt": true
+}
