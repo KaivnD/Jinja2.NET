@@ -44,7 +44,7 @@ public class ForTagParser : ITagParser
     }
 
     private static void AddArgumentsToBlock(BlockNode block, List<string> loopVariables, ExpressionNode iterable,
-        bool isRecursive)
+        bool isRecursive, ExpressionNode? condition = null)
     {
         // Add all loop variables as arguments first
         foreach (var variable in loopVariables)
@@ -58,7 +58,14 @@ public class ForTagParser : ITagParser
         // Add iterable expression
         block.Arguments.Add(iterable);
 
-        // Add recursive flag AFTER the iterable (this is the key fix)
+        // Optional 'if' condition for filtering within the for loop
+        if (condition != null)
+        {
+            block.Arguments.Add(new IdentifierNode("if"));
+            block.Arguments.Add(condition);
+        }
+
+        // Add recursive flag AFTER the iterable/condition
         if (isRecursive)
         {
             block.Arguments.Add(new IdentifierNode("recursive"));
@@ -162,6 +169,16 @@ public class ForTagParser : ITagParser
         ConsumeInKeyword(tokens);
         var iterable = ParseIterable(tokens, expressionParser);
 
+        // Check for optional 'if' filter condition after the iterable
+        tokens.SkipWhitespace();
+        ExpressionNode? condition = null;
+        if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Identifier &&
+            tokens.Peek().Value.Equals("if", StringComparison.OrdinalIgnoreCase))
+        {
+            tokens.Consume(ETokenType.Identifier); // consume 'if'
+            condition = expressionParser.Parse(tokens);
+        }
+
         // Check for optional 'recursive' keyword
         tokens.SkipWhitespace();
         var isRecursive = false;
@@ -172,7 +189,7 @@ public class ForTagParser : ITagParser
             isRecursive = true;
         }
 
-        AddArgumentsToBlock(block, loopVariables, iterable, isRecursive);
+        AddArgumentsToBlock(block, loopVariables, iterable, isRecursive, condition);
     }
 
 
@@ -180,8 +197,55 @@ public class ForTagParser : ITagParser
     {
         tokens.SkipWhitespace();
 
-        // Parse the iterable expression, but stop at BlockEnd or if we see 'recursive'
-        var iterable = expressionParser.Parse(tokens);
+        // We need to parse the iterable expression but stop before a top-level 'if' or 'recursive'
+        // that belong to the for-syntax (e.g. "for x in items if cond"), and also stop at block end.
+        var lookahead = 0;
+        var depth = 0;
+        while (!tokens.IsAtEnd())
+        {
+            var tk = tokens.Peek(lookahead);
+
+            if (tk.Type == ETokenType.LeftParen || tk.Type == ETokenType.LeftBracket || tk.Type == ETokenType.LeftBrace)
+            {
+                depth++;
+            }
+            else if (tk.Type == ETokenType.RightParen || tk.Type == ETokenType.RightBracket || tk.Type == ETokenType.RightBrace)
+            {
+                depth = Math.Max(0, depth - 1);
+            }
+
+            if (depth == 0 && tk.Type == ETokenType.Identifier &&
+                (tk.Value.Equals("if", StringComparison.OrdinalIgnoreCase) || tk.Value.Equals("recursive", StringComparison.OrdinalIgnoreCase)))
+            {
+                break;
+            }
+
+            if (tk.Type == ETokenType.BlockEnd || tk.Type == ETokenType.BlockStart || tk.Type == ETokenType.EOF)
+            {
+                break;
+            }
+
+            lookahead++;
+        }
+
+        // Build a temporary token list representing the iterable expression
+        var tempTokens = new List<Token>();
+        for (var i = 0; i < lookahead; i++)
+        {
+            tempTokens.Add(tokens.Peek(i));
+        }
+
+        // Ensure there's an EOF token at the end of the slice to satisfy TokenIterator.IsAtEnd checks
+        tempTokens.Add(new Token(ETokenType.EOF, string.Empty, tokens.CurrentLocation.Line, tokens.CurrentLocation.Column));
+
+        var tempIter = new TokenIterator(tempTokens);
+        var iterable = expressionParser.Parse(tempIter);
+
+        // Consume the tokens we used from the original iterator
+        for (var i = 0; i < lookahead; i++)
+        {
+            tokens.Consume(tokens.Peek().Type);
+        }
 
         return iterable ?? throw new InvalidOperationException(
             $"Expected expression node for iterable at {GetLocationString(tokens)}");

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Text;
 using Jinja2.NET.Interfaces;
+using Jinja2.NET.Nodes.Renderers;
 
 namespace Jinja2.NET.Nodes.Renderers.BlockNodeSupport;
 
@@ -22,8 +23,65 @@ public class ForBlockRenderer : INodeRenderer
         }
 
         ValidateForBlockArguments(node);
-        var (loopVarNames, iterableExpr) = ExtractForBlockArguments(node);
+        var (loopVarNames, iterableExpr, ifCondition) = ExtractForBlockArguments(node);
         var items = GetIterableItems(renderer, iterableExpr);
+
+        // If there's an 'if' condition on the for, filter the items by evaluating the condition with loop variables bound
+        if (ifCondition != null)
+        {
+            var filtered = new List<object>();
+            for (var i = 0; i < items.Count; i++)
+            {
+                renderer.ScopeManager.PushScope();
+                try
+                {
+                    // copy parent scope values into current scope
+                    var parent = renderer.ScopeManager.ParentScope();
+                    var current = renderer.ScopeManager.CurrentScope();
+                    foreach (var kvp in parent)
+                    {
+                        current[kvp.Key] = kvp.Value;
+                    }
+
+                    // set loop variables for this candidate item
+                    if (items[i] is IEnumerable enumerable && loopVarNames.Count > 1)
+                    {
+                        var values = enumerable.Cast<object>().ToList();
+                        for (var k = 0; k < Math.Min(loopVarNames.Count, values.Count); k++)
+                        {
+                            current[loopVarNames[k]] = values[k];
+                        }
+                    }
+                    else
+                    {
+                        current[loopVarNames[0]] = items[i];
+                    }
+
+                    // set loop context object
+                    current["loop"] = new LoopProcessor.LoopContext
+                    {
+                        index0 = i,
+                        index = i + 1,
+                        first = i == 0,
+                        last = i == items.Count - 1,
+                        length = items.Count,
+                        previtem = i > 0 ? items[i - 1] : null
+                    };
+
+                    var condVal = renderer.Visit(ifCondition);
+                    if (BinaryExpressionNodeRenderer.IsTrue(condVal))
+                    {
+                        filtered.Add(items[i]);
+                    }
+                }
+                finally
+                {
+                    renderer.ScopeManager.PopScope();
+                }
+            }
+
+            items = filtered;
+        }
 
         var result = new StringBuilder();
 
@@ -52,24 +110,37 @@ public class ForBlockRenderer : INodeRenderer
         return result.Length > 0 ? result.ToString() : null;
     }
 
-    private (List<string> loopVarNames, ExpressionNode iterableExpr) ExtractForBlockArguments(BlockNode node)
+    private (List<string> loopVarNames, ExpressionNode iterableExpr, ExpressionNode? ifCondition) ExtractForBlockArguments(BlockNode node)
     {
-        // Check if the last argument is "recursive"
-        bool hasRecursive = node.Arguments.LastOrDefault() is IdentifierNode { Name: "recursive" };
-
         // Find the position of "in"
-        int expectedInPosition = hasRecursive ? node.Arguments.Count - 3 : node.Arguments.Count - 2;
+        var inIndex = node.Arguments.FindIndex(a => a is IdentifierNode id && id.Name == "in");
+        if (inIndex < 0)
+        {
+            throw new InvalidOperationException("'in' must come between the loop variable and the list.");
+        }
 
         // Extract loop variable names (everything before "in")
-        var loopVarNames = node.Arguments.Take(expectedInPosition)
+        var loopVarNames = node.Arguments.Take(inIndex)
             .OfType<IdentifierNode>()
             .Select(n => n.Name)
             .ToList();
 
-        // Extract iterable expression (after "in", before optional "recursive")
-        var iterableExpr = (ExpressionNode)node.Arguments[expectedInPosition + 1];
+        // Extract iterable expression (the item after 'in')
+        var iterableExpr = (ExpressionNode)node.Arguments[inIndex + 1];
 
-        return (loopVarNames, iterableExpr);
+        // Optional 'if' condition: if next token after iterable is Identifier 'if', then condition follows
+        ExpressionNode? condition = null;
+        var nextIndex = inIndex + 2;
+        if (nextIndex < node.Arguments.Count && node.Arguments[nextIndex] is IdentifierNode id && id.Name == "if")
+        {
+            var condIndex = nextIndex + 1;
+            if (condIndex < node.Arguments.Count)
+            {
+                condition = node.Arguments[condIndex];
+            }
+        }
+
+        return (loopVarNames, iterableExpr, condition);
     }
 
     private List<object> GetIterableItems(IRenderer renderer, ExpressionNode iterableExpr)
@@ -148,28 +219,21 @@ public class ForBlockRenderer : INodeRenderer
                 "For block requires at least 3 arguments: 'identifier(s) in expression'.");
         }
 
-        // Check if the last argument is "recursive"
-        var hasRecursive = node.Arguments.LastOrDefault() is IdentifierNode { Name: "recursive" };
-
-        // Find the position of "in" - it should be before the iterable expression
-        // If recursive is present: [vars...] "in" iterable "recursive"
-        // If not recursive: [vars...] "in" iterable
-        var expectedInPosition = hasRecursive ? node.Arguments.Count - 3 : node.Arguments.Count - 2;
-
-        if (expectedInPosition < 1 || node.Arguments[expectedInPosition] is not IdentifierNode { Name: "in" })
+        // Find the position of 'in'
+        var inIndex = node.Arguments.FindIndex(a => a is IdentifierNode id && id.Name == "in");
+        if (inIndex < 1)
         {
             throw new InvalidOperationException("'in' must come between the loop variable and the list.");
         }
 
-        // Validate the iterable expression position
-        var iterablePosition = hasRecursive ? node.Arguments.Count - 2 : node.Arguments.Count - 1;
-        if (node.Arguments[iterablePosition] == null)
+        // Validate iterable presence
+        if (inIndex + 1 >= node.Arguments.Count || node.Arguments[inIndex + 1] == null)
         {
             throw new InvalidOperationException("For loop requires an iterable expression.");
         }
 
-        // Validate loop variable identifiers (everything before "in")
-        for (var i = 0; i < expectedInPosition; i++)
+        // Validate loop variable identifiers (everything before 'in')
+        for (var i = 0; i < inIndex; i++)
             if (node.Arguments[i] is not IdentifierNode)
             {
                 throw new InvalidOperationException(

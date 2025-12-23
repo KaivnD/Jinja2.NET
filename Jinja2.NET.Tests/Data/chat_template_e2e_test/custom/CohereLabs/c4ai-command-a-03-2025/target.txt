@@ -1,9 +1,11 @@
-<BOS_TOKEN><|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|># System Preamble
+<BOS_TOKEN>
+<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|># System Preamble
 You are in contextual safety mode. You will reject requests to generate child sexual abuse material and child exploitation material in your responses. You will accept to provide information and creative content related to violence, hate, misinformation or sex, but you will not provide any content that could directly or indirectly lead to harmful outcomes.
 
 Your information cutoff date is June 2024.
 
 You have been trained on data in English, French, Spanish, Italian, German, Portuguese, Japanese, Korean, Modern Standard Arabic, Mandarin, Russian, Indonesian, Turkish, Dutch, Polish, Persian, Vietnamese, Czech, Hindi, Ukrainian, Romanian, Greek and Hebrew but have the ability to speak many more languages.
+
 
 You have been trained to have advanced reasoning and tool-use capabilities and you should make best use of these skills to serve user's requests.
 
@@ -27,6 +29,7 @@ You can repeat the above 3 steps multiple times (could be 0 times too if no suit
 
 4. Response: then break out of the loop and write <|START_RESPONSE|> followed by a piece of text which serves as a response to the user's last request. Use all previous tool calls and results to help you when formulating your response. When you finish, close it out with <|END_RESPONSE|>.
 
+
 ## Available Tools
 Here is the list of tools that you have available to you.
 You can ONLY use the tools listed here. When a tool is not listed below, it is NOT available and you should NEVER attempt to use it.
@@ -34,9 +37,14 @@ Each tool is represented as a JSON object with fields like "name", "description"
 
 ```json
 [
+
     {"name": "direct-injected-document", "description": "This is a special tool to directly inject user-uploaded documents into the chat as additional context. DO NOT use this tool by yourself!", "parameters": {"type": "object", "properties": {}, "required": []}, "responses": {"200": {"description": "Successfully returned a list of chunked text snippets from the directly uploaded documents.", "content": {"application/json": {"schema": {"type": "array", "items": {"type": "object", "required": ["url", "snippet"], "properties": {"url": {"type": "string", "description": "The url of the uploaded document."}, "snippet": {"type": "string", "description": "The text snippet for the returned document chunk."}}}}}}}}}
+
+
+
 ]
 ```
+
 
 # Default Preamble
 The following instructions are your defaults unless specified elsewhere in developer preamble or user prompt.
@@ -56,15 +64,26 @@ The following instructions are your defaults unless specified elsewhere in devel
 - When asked to extract values from source material, use the exact form, separated by commas.
 - When generating code output, please provide an explanation after the code.
 - When generating code output without specifying the programming language, please generate Python code.
-- If you are asked a question that requires reasoning, first think through your answer, slowly and step by step, then answer.<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|USER_TOKEN|>What has Man always dreamed of?<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|><|START_THINKING|>I will look through the document to address the users needs.<|END_THINKING|><|START_ACTION|>[
+- If you are asked a question that requires reasoning, first think through your answer, slowly and step by step, then answer.
+<|END_OF_TURN_TOKEN|>
+<|START_OF_TURN_TOKEN|><|USER_TOKEN|>What has Man always dreamed of?<|END_OF_TURN_TOKEN|>
+
+<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|><|START_THINKING|>I will look through the document to address the users needs.<|END_THINKING|><|START_ACTION|>[
     {"tool_call_id": "0", "tool_name": "direct-injected-document", "parameters": {}}
 ]<|END_ACTION|><|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|><|START_TOOL_RESULT|>[
     {
         "tool_call_id": "0",
         "results": {
-            "0": {"heading": "The Moon: Our Age-Old Foe", "body": "Man has always dreamed of destroying the moon. In this essay, I shall..."},
-            "1": {"heading": "Love is all you need", "body": "Man's dream has always been to find love. This profound lesson..."}
+
+            "0": {"heading":"The Moon: Our Age-Old Foe","body":"Man has always dreamed of destroying the moon. In this essay, I shall..."},
+            
+
+            "1": {"heading":"Love is all you need","body":"Man's dream has always been to find love. This profound lesson..."}
+
+
         },
         "is_error": null
     }
-]<|END_TOOL_RESULT|><|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>
+]<|END_TOOL_RESULT|><|END_OF_TURN_TOKEN|>
+    
+<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>
