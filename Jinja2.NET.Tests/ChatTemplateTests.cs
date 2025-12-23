@@ -42,7 +42,7 @@ public class ChatTemplateTests
     [InlineData("h2oai/h2o-danube-1.8b-chat")]
     [InlineData("internlm/internlm2-chat-7b")]
     [InlineData("TheBloke/deepseek-coder-33B-instruct-AWQ")]
-    [InlineData("ericzzz/falcon-rw-1b-chat")] // indexing issue
+    [InlineData("ericzzz/falcon-rw-1b-chat")]
     [InlineData("abacusai/Smaug-34B-v0.1")]
     [InlineData("maywell/Synatra-Mixtral-8x7B")]
     [InlineData("deepseek-ai/deepseek-coder-33b-instruct")]
@@ -50,10 +50,10 @@ public class ChatTemplateTests
     [InlineData("fireworks-ai/firefunction-v1")] // parsing issue
     [InlineData("maywell/PiVoT-MoE")] // parsing issue
     [InlineData("CohereForAI/c4ai-command-r-v01")] // call method items from dictionary issue
-    [InlineData("CohereForAI/c4ai-command-r-v01 (JSON Schema)")] // parsing issue
+    [InlineData("CohereForAI/c4ai-command-r-v01 (JSON Schema)")] // macro feature
     [InlineData("mistralai/Mistral-7B-Instruct-v0.3 (JSON Schema)")] // parsing issue
-    [InlineData("CISCai/Mistral-7B-Instruct-v0.3-SOTA-GGUF")] // parsing issue
-    [InlineData("NousResearch/Hermes-2-Pro-Llama-3-8B (JSON Schema)")] // parsing issue
+    [InlineData("CISCai/Mistral-7B-Instruct-v0.3-SOTA-GGUF")]
+    [InlineData("NousResearch/Hermes-2-Pro-Llama-3-8B (JSON Schema)")] // macro feature
     [InlineData("mistralai/Mistral-Nemo-Instruct-2407")]  // parsing issue
     [InlineData("meta-llama/Llama-3.1-8B-Instruct")] // parsing issue
     [InlineData("deepseek-ai/DeepSeek-R1")]

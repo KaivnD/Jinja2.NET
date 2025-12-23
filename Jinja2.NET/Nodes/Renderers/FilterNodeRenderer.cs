@@ -12,7 +12,20 @@ public class FilterNodeRenderer : INodeRenderer
         }
 
         var value = renderer.Visit(node.Expression);
-        var args = node.Arguments.Select(arg => renderer.Visit(arg)).ToArray();
+        var argsList = node.Arguments.Select(arg => renderer.Visit(arg)).ToList();
+
+        if (node.Kwargs != null && node.Kwargs.Count > 0)
+        {
+            var dict = new Dictionary<string, object?>();
+            foreach (var kv in node.Kwargs)
+            {
+                dict[kv.Key] = renderer.Visit(kv.Value);
+            }
+            // Append kwargs dictionary as a single last argument
+            argsList.Add(dict);
+        }
+
+        var args = argsList.ToArray();
 
         if (renderer.CustomFilters != null && renderer.CustomFilters.TryGetValue(node.FilterName, out var customFilter))
         {

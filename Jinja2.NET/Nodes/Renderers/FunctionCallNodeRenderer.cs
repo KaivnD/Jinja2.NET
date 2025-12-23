@@ -16,6 +16,7 @@ public class FunctionCallNodeRenderer : INodeRenderer
             "loop" => HandleRecursiveLoop(node, renderer),
             "range" => HandleRange(node, renderer),
             "namespace" => HandleNamespace(node, renderer),
+            "dict" => HandleDict(node, renderer),
             "raise_exception" => HandleRaiseException(node, renderer),
             _ => throw new NotSupportedException($"Function '{node.FunctionName}' is not supported")
         };
@@ -55,6 +56,32 @@ public class FunctionCallNodeRenderer : INodeRenderer
         }
 
         return ns;
+    }
+
+    private object? HandleDict(FunctionCallNode node, IRenderer renderer)
+    {
+        var result = new Dictionary<string, object?>();
+
+        // If first positional arg is a dictionary-like object, copy its entries
+        if (node.Arguments.Count > 0)
+        {
+            var argVal = renderer.Visit(node.Arguments[0]);
+            if (argVal is System.Collections.IDictionary idict)
+            {
+                foreach (System.Collections.DictionaryEntry de in idict)
+                {
+                    result[de.Key?.ToString() ?? string.Empty] = de.Value;
+                }
+            }
+        }
+
+        // Merge kwargs (they override entries from the first arg)
+        foreach (var kvp in node.Kwargs)
+        {
+            result[kvp.Key] = renderer.Visit(kvp.Value);
+        }
+
+        return result;
     }
 
     private object? HandleRange(FunctionCallNode node, IRenderer renderer)

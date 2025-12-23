@@ -223,25 +223,14 @@ public class ExpressionParser : IExpressionParser
             tokens.SkipWhitespace();
             if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.LeftParen)
             {
-                tokens.Consume(ETokenType.LeftParen);
-                tokens.SkipWhitespace();
-                while (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.RightParen)
-                {
-                    args.Add(Parse(tokens, ETokenType.RightParen));
-                    tokens.SkipWhitespace();
-                    if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Comma)
-                    {
-                        tokens.Consume(ETokenType.Comma);
-                    }
-
-                    tokens.SkipWhitespace();
-                }
-
-                tokens.Consume(ETokenType.RightParen);
-                tokens.SkipWhitespace();
+                // Use existing call-argument parser to support positional and keyword args
+                var (parsedArgs, kwargs) = ParseCallArguments(tokens);
+                node = new FilterNode(node, filterToken.Value, parsedArgs, kwargs);
             }
-
-            node = new FilterNode(node, filterToken.Value, args);
+            else
+            {
+                node = new FilterNode(node, filterToken.Value, args);
+            }
         }
 
         return node;
