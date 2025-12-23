@@ -97,7 +97,8 @@ public class MethodCallNodeRenderer : INodeRenderer
                 foreach (var k in dict2.Keys)
                 {
                     var v = dict2[k!];
-                    list.Add(new KeyValuePair<object?, object?>(k, v));
+                    // Return each item as a 2-element enumerable so loop variable unpacking works
+                    list.Add(new List<object?> { k, v });
                 }
                 return list;
             }
