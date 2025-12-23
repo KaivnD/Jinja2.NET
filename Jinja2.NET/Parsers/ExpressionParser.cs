@@ -177,6 +177,34 @@ public class ExpressionParser : IExpressionParser
                 }
             }
 
+            // Ternary conditional expression: <true_expr> if <condition> else <false_expr>
+            if (token.Type == ETokenType.Identifier && token.Value.Equals("if", StringComparison.OrdinalIgnoreCase))
+            {
+                // consume 'if'
+                tokens.Consume(token.Type);
+                tokens.SkipWhitespace();
+
+                // Parse condition (will stop before the 'else' identifier)
+                var condition = ParseBinary(tokens, /*parentPrecedence*/ 0, stopTokenType);
+                tokens.SkipWhitespace();
+
+                var nextTok = tokens.Peek();
+                if (!(nextTok.Type == ETokenType.Identifier && nextTok.Value.Equals("else", StringComparison.OrdinalIgnoreCase)))
+                {
+                    throw new InvalidOperationException($"Expected 'else' after 'if' in conditional expression at {nextTok.Line}:{nextTok.Column}");
+                }
+
+                // consume 'else'
+                tokens.Consume(nextTok.Type);
+                tokens.SkipWhitespace();
+
+                // Parse false branch
+                var falseExpr = ParseBinary(tokens, /*parentPrecedence*/ 0, stopTokenType);
+
+                left = new Nodes.ConditionalExpressionNode(condition, left, falseExpr);
+                continue;
+            }
+
             var (precedence, isRightAssociative, op) = GetOperatorPrecedence(token);
             if (precedence == 0 && !token.Value.Equals("or", StringComparison.OrdinalIgnoreCase) && !token.Value.Equals("and", StringComparison.OrdinalIgnoreCase))
             {
