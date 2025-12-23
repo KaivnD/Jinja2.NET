@@ -81,16 +81,53 @@ public class StatementParser : IStatementParser
         }
         else
         {
-            // Gracefully handle unknown block: consume identifier and block end, create a BlockNode
-            tokens.Consume(ETokenType.Identifier);
+            // Gracefully handle unknown block.
+            // Support shorthand assignment syntax: `identifier = expression` as an implicit `set` block.
+            var identifierToken = tokens.Consume(ETokenType.Identifier);
             tokens.SkipWhitespace();
-            tokens.Consume(ETokenType.BlockEnd);
-            node = new BlockNode(blockName)
+
+            if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Equals)
             {
-                StartMarkerType = startToken.Type,
-                EndMarkerType = ETokenType.BlockEnd,
-                TrimLeft = trimLeft
-            };
+                // Parse RHS expression until BlockEnd
+                tokens.Consume(ETokenType.Equals);
+                tokens.SkipWhitespace();
+                var exprTokens = new List<Token>();
+                while (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.BlockEnd)
+                {
+                    exprTokens.Add(tokens.Consume(tokens.Peek().Type));
+                }
+
+                var endToken = tokens.Consume(ETokenType.BlockEnd);
+
+                // Parse expression tokens
+                var exprIterator = new TokenIterator(exprTokens);
+                var expression = _expressionParser.Parse(exprIterator);
+
+                // Create a set block: arguments = [ targetIdentifier, expression ]
+                var target = new IdentifierNode(identifierToken.Value);
+                var arguments = new List<ExpressionNode> { target, expression };
+                var block = new BlockNode(TemplateConstants.BlockNames.Set, arguments, new List<ASTNode>())
+                {
+                    StartMarkerType = startToken.Type,
+                    EndMarkerType = endToken.Type,
+                    TrimLeft = trimLeft,
+                    TrimRight = endToken.TrimRight
+                };
+
+                node = block;
+            }
+            else
+            {
+                // Unknown block: consume block end and return a generic BlockNode
+                tokens.SkipWhitespace();
+                tokens.Consume(ETokenType.BlockEnd);
+                node = new BlockNode(blockName)
+                {
+                    StartMarkerType = startToken.Type,
+                    EndMarkerType = ETokenType.BlockEnd,
+                    TrimLeft = trimLeft
+                };
+            }
         }
 
         if (node is BlockNode blockNode)

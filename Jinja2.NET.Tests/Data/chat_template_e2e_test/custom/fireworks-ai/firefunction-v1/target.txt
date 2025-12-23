@@ -1,5 +1,6 @@
 <s>SYSTEM: You are a helpful assistant with access to functions. Use them if required.
 
+
 FUNCTIONS: [
     {
         "name": "get_stock_price",
@@ -40,8 +41,11 @@ FUNCTIONS: [
     }
 ]
 
+
 SYSTEM: You are a helpful assistant with access to functions. Use them if required.
 
+
 USER: Hi, can you tell me the current stock price of AAPL?
+
 
 ASSISTANT: 

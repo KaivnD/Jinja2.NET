@@ -42,6 +42,7 @@ public class Renderer : IRenderer
         _renderers[typeof(RawNode)] = new RawNodeRenderer();
         _renderers[typeof(LiteralNode)] = new LiteralNodeRenderer();
         _renderers[typeof(ListLiteralNode)] = new ListLiteralNodeRenderer();
+        _renderers[typeof(MapLiteralNode)] = new MapLiteralNodeRenderer();
         _renderers[typeof(UnaryExpressionNode)] = new UnaryExpressionNodeRenderer();
         _renderers[typeof(BinaryExpressionNode)] = new BinaryExpressionNodeRenderer();
         _renderers[typeof(IndexNode)] = new IndexNodeRenderer();

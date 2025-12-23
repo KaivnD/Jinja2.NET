@@ -20,6 +20,8 @@ public enum ETokenType
     RightParen,      // )
     LeftBracket,     // [
     RightBracket,    // ]
+    LeftBrace,       // {
+    RightBrace,      // }
     Comma,           // ,
     Colon,           // :
     Equals,          // =

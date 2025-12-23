@@ -302,6 +302,39 @@ public class ExpressionParser : IExpressionParser
         return new ListLiteralNode(elements);
     }
 
+    protected virtual ExpressionNode ParseMapLiteral(TokenIterator tokens)
+    {
+        tokens.Consume(ETokenType.LeftBrace);
+        var entries = new List<KeyValuePair<ExpressionNode, ExpressionNode>>();
+
+        while (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.RightBrace)
+        {
+            tokens.SkipWhitespace();
+            var key = Parse(tokens, ETokenType.Colon);
+            tokens.SkipWhitespace();
+            if (tokens.Peek().Type != ETokenType.Colon)
+            {
+                throw new InvalidOperationException($"Expected ':' in map literal at {tokens.CurrentLocation.Line}:{tokens.CurrentLocation.Column}");
+            }
+            tokens.Consume(ETokenType.Colon);
+            tokens.SkipWhitespace();
+            var value = Parse(tokens, ETokenType.RightBrace);
+            entries.Add(new KeyValuePair<ExpressionNode, ExpressionNode>(key, value));
+            tokens.SkipWhitespace();
+            if (tokens.Peek().Type == ETokenType.Comma)
+            {
+                tokens.Consume(ETokenType.Comma);
+            }
+            else if (tokens.Peek().Type != ETokenType.RightBrace)
+            {
+                throw new InvalidOperationException($"Expected Comma or RightBrace in map literal at {tokens.CurrentLocation.Line}:{tokens.CurrentLocation.Column}");
+            }
+        }
+
+        tokens.Consume(ETokenType.RightBrace);
+        return new MapLiteralNode(entries);
+    }
+
     protected virtual ExpressionNode ParsePrimary(TokenIterator tokens)
     {
         tokens.SkipWhitespace();
@@ -383,6 +416,8 @@ public class ExpressionParser : IExpressionParser
 
             case ETokenType.LeftBracket:
                 return ParseListLiteral(tokens);
+            case ETokenType.LeftBrace:
+                return ParseMapLiteral(tokens);
 
             default:
                 throw new InvalidOperationException(

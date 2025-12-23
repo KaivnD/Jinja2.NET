@@ -59,15 +59,15 @@ public class ChatTemplateTests
     [InlineData("deepseek-ai/DeepSeek-R1")]
     [InlineData("MadeAgents/Hammer2.1")] // parsing issue
     [InlineData("Qwen/Qwen2.5-7B-Instruct")] // unknown
-    [InlineData("Qwen/Qwen2.5-VL-7B-Instruct")] // binary operation issue
+    [InlineData("Qwen/Qwen2.5-VL-7B-Instruct")]
     [InlineData("Qwen/Qwen3-0.6B")]
-    [InlineData("CohereLabs/c4ai-command-a-03-2025")]  // parsing issue
-    [InlineData("openbmb/MiniCPM3-4B")] // parsing issue
-    [InlineData("ai21labs/AI21-Jamba-Large-1.6")]  // parsing issue
+    [InlineData("CohereLabs/c4ai-command-a-03-2025")] // macro feature
+    [InlineData("openbmb/MiniCPM3-4B")] // macro feature
+    [InlineData("ai21labs/AI21-Jamba-Large-1.6")] // macro feature
     [InlineData("meta-llama/Llama-3.2-11B-Vision-Instruct")] // parsing issue
     [InlineData("meta-llama/Llama-Guard-3-11B-Vision")]  // parsing issue
     [InlineData("HuggingFaceTB/SmolLM3-3B")] // parsing issue
-    [InlineData("CohereLabs/command-a-reasoning-08-2025")]  // parsing issue
+    [InlineData("CohereLabs/command-a-reasoning-08-2025")] // macro feature
     public void ChatTemplate_Should_Render_Correctly(string m)
     {
         var config = ChatTemplateTestBuilder.GetTemplateConfig(m);

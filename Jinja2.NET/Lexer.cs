@@ -341,6 +341,8 @@ public class Lexer : ILexer
                 ")" => ETokenType.RightParen,
                 "[" => ETokenType.LeftBracket,
                 "]" => ETokenType.RightBracket,
+                "{" => ETokenType.LeftBrace,
+                "}" => ETokenType.RightBrace,
                 "," => ETokenType.Comma,
                 ":" => ETokenType.Colon,
                 "=" => ETokenType.Equals,
