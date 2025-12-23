@@ -14,6 +14,7 @@ public abstract class LoopProcessor : ILoopProcessor
         public int index0 { get; set; }
         public bool last { get; set; }
         public int length { get; set; }
+        public object previtem { get; set; }
     }
 
     public virtual string Process(IRenderer renderer, BlockNode node, List<string> loopVarNames, List<object> items,
@@ -116,5 +117,12 @@ public abstract class LoopProcessor : ILoopProcessor
             last = index == items.Count - 1,
             length = items.Count
         };
+
+        // set previtem to the previous item when available
+        if (index > 0)
+        {
+            var loopCtx = (LoopContext)currentScope["loop"];
+            loopCtx.previtem = items[index - 1];
+        }
     }
 }

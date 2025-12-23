@@ -14,6 +14,11 @@ public class IndexNodeRenderer : INodeRenderer
         }
         var target = renderer.Visit(node.Target);
 
+        if (target == null)
+        {
+            return null;
+        }
+
         if (node.Index is SliceNode slice)
         {
             int? startRaw = null;
