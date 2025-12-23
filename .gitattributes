@@ -1,7 +1,8 @@
 ###############################################################################
 # Set default behavior to automatically normalize line endings.
 ###############################################################################
-* text=auto
+* text eol=lf
+*.png *.jpg *.jpeg *.gif *.zip *.rar *.7z *.exe *.dll binary
 
 ###############################################################################
 # Set default behavior for command prompt diff.
