@@ -238,6 +238,11 @@ public class MainParser
             .RegisterTag(TemplateConstants.BlockNames.Macro, () => new MacroTagParser())
             .RegisterTag(TemplateConstants.BlockNames.EndMacro,
                 () => new EndTagParser(TemplateConstants.BlockNames.EndMacro))
+            .RegisterTag(TemplateConstants.BlockNames.Call, () => new CallTagParser())
+            .RegisterTag(TemplateConstants.BlockNames.EndCall,
+                () => new EndTagParser(TemplateConstants.BlockNames.EndCall))
+            .RegisterTag(TemplateConstants.BlockNames.EndSet,
+                () => new EndTagParser(TemplateConstants.BlockNames.EndSet))
             .RegisterTag(TemplateConstants.BlockNames.Raw, () => new RawTagParser())
             .RegisterTag(TemplateConstants.BlockNames.Set, () => new SetTagParser())
             .RegisterTag(TemplateConstants.BlockNames.Elif, () => new ElifTagParser())

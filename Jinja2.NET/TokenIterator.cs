@@ -114,7 +114,17 @@ public class TokenIterator
     public Token Peek(int lookahead = 0)
     {
         var index = _current + lookahead;
-        return index < _tokens.Count && index >= 0 ? _tokens[index] : _tokens[_tokens.Count - 1];
+        if (index < 0)
+        {
+            return _tokens[0];
+        }
+
+        if (index >= _tokens.Count)
+        {
+            return _tokens[_tokens.Count - 1];
+        }
+
+        return _tokens[index];
     }
 
     public void SkipWhitespace()
