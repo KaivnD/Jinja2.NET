@@ -12,6 +12,23 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
             throw new ArgumentException($"Expected BinaryExpressionNode, got {nodeIn.GetType().Name}");
         }
 
+        // Implement short-circuit evaluation for 'and' / 'or'
+        if (node.Operator.Equals("and", StringComparison.OrdinalIgnoreCase))
+        {
+            var leftVal = renderer.Visit(node.Left);
+            if (!IsTrue(leftVal)) return false;
+            var rightVal = renderer.Visit(node.Right);
+            return IsTrue(rightVal);
+        }
+
+        if (node.Operator.Equals("or", StringComparison.OrdinalIgnoreCase))
+        {
+            var leftVal = renderer.Visit(node.Left);
+            if (IsTrue(leftVal)) return true;
+            var rightVal = renderer.Visit(node.Right);
+            return IsTrue(rightVal);
+        }
+
         var left = renderer.Visit(node.Left);
         var right = renderer.Visit(node.Right);
 

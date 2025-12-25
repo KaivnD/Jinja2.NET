@@ -21,6 +21,25 @@ public class SetTagParser : BaseTagParser
             var block = CreateSetBlock(targets, new LiteralNode(string.Empty), tagStartTokenType, endToken, blockStartToken);
             // Parse body until endset
             ParseBlockBody(tokens, blockBodyParser, block, TemplateConstants.BlockNames.EndSet);
+
+            // Consume the closing endset tag so enclosing parsers don't see it as an unexpected end
+            tokens.SkipWhitespace();
+            if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.BlockStart)
+            {
+                var startToken = tokens.Consume(ETokenType.BlockStart);
+                var endIdent = tokens.Consume(ETokenType.Identifier);
+                if (!string.Equals(endIdent.Value, TemplateConstants.BlockNames.EndSet, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw CreateParseException($"Expected '{TemplateConstants.BlockNames.EndSet}' end tag, but found '{endIdent.Value}'", endIdent);
+                }
+
+                var closingEndToken = tokens.Consume(ETokenType.BlockEnd);
+
+                // Update trim flags based on the closing tag
+                block.TrimBodyRight = startToken.TrimLeft;
+                block.TrimRight = closingEndToken.TrimRight;
+            }
+
             return block;
         }
 

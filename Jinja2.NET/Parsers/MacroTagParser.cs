@@ -42,6 +42,18 @@ public class MacroTagParser : BaseTagParser
             {
                 var id = tokens.Consume(ETokenType.Identifier);
                 parameters.Add(new IdentifierNode(id.Value));
+
+                // 支持参数默认值（例如: name=True 或 name="default"）
+                SkipWhitespace(tokens);
+                if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.Equals)
+                {
+                    // 消耗 '=' 并解析后续的表达式，直到逗号或右括号，但不将其作为参数加入列表
+                    tokens.Consume(ETokenType.Equals);
+                    SkipWhitespace(tokens);
+                    // 使用传入的表达式解析器来解析默认值
+                    expressionParser.Parse(tokens, ETokenType.RightParen);
+                    SkipWhitespace(tokens);
+                }
             }
 
             SkipWhitespace(tokens);
