@@ -21,6 +21,12 @@
     <RepositoryUrl>https://github.com/AlexNek/Jinja2.NET</RepositoryUrl>
     <PackageProjectUrl>https://github.com/AlexNek/Jinja2.NET</PackageProjectUrl>
 
+    <!-- Symbols / CI -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+
     <!-- Docs -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     
@@ -31,6 +37,14 @@
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="\" />
     <None Include="assets\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GitVersion.MsBuild" Version="6.4.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
