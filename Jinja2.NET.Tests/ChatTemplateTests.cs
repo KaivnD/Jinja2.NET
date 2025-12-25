@@ -57,16 +57,16 @@ public class ChatTemplateTests
     [InlineData("mistralai/Mistral-Nemo-Instruct-2407")]
     [InlineData("meta-llama/Llama-3.1-8B-Instruct")]
     [InlineData("deepseek-ai/DeepSeek-R1")]
-    [InlineData("MadeAgents/Hammer2.1")] // maybe set endset inside if block causes issue
+    [InlineData("MadeAgents/Hammer2.1")]
     [InlineData("Qwen/Qwen2.5-7B-Instruct")]
     [InlineData("Qwen/Qwen2.5-VL-7B-Instruct")]
     [InlineData("Qwen/Qwen3-0.6B")]
     [InlineData("CohereLabs/c4ai-command-a-03-2025")]
     [InlineData("openbmb/MiniCPM3-4B")]
-    [InlineData("ai21labs/AI21-Jamba-Large-1.6")] // optional args in macro call
+    [InlineData("ai21labs/AI21-Jamba-Large-1.6")] // test result missing user message content, why?
     [InlineData("meta-llama/Llama-3.2-11B-Vision-Instruct")]
     [InlineData("meta-llama/Llama-Guard-3-11B-Vision")]
-    [InlineData("HuggingFaceTB/SmolLM3-3B")] // I don't know what does generation block mean in this test case.
+    [InlineData("HuggingFaceTB/SmolLM3-3B")] // I don't know what does {% generation %} {% endgeneration %} block mean in this test case.
     [InlineData("CohereLabs/command-a-reasoning-08-2025")]
     public void ChatTemplate_Should_Render_Correctly(string m)
     {

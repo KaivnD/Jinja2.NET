@@ -1,5 +1,8 @@
+
 <|im_start|>system
 You are a helpful assistant.<|im_end|>
+
+
 
 <|im_start|>user
 [BEGIN OF TASK INSTRUCTION]
@@ -11,11 +14,10 @@ You are a tool calling assistant. In order to complete the user's request, you n
 The following are characters that may interact with you
 1. user: Provides query or additional information.
 2. tool: Returns the results of the tool calling.
-
 [END OF TASK INSTRUCTION]
 
 [BEGIN OF AVAILABLE_TOOLS]
-[{"type": "function", "function": {"name": "get_current_temperature", "description": "Get the current temperature at a location.", "parameters": {"type": "object", "properties": {"location": {"type": "string", "description": "The location to get the temperature for, in the format \"City, Country\""}, "unit": {"type": "string", "enum": ["celsius", "fahrenheit"], "description": "The unit to return the temperature in."}}, "required": ["location", "unit"]}, "return": {"type": "number", "description": "The current temperature at the specified location in the specified units, as a float."}}}, {"type": "function", "function": {"name": "get_current_wind_speed", "description": "Get the current wind speed in km/h at a given location.", "parameters": {"type": "object", "properties": {"location": {"type": "string", "description": "The location to get the temperature for, in the format \"City, Country\""}}, "required": ["location"]}, "return": {"type": "number", "description": "The current wind speed at the given location in km/h, as a float."}}}]
+[{"type":"function","function":{"name":"get_current_temperature","description":"Get the current temperature at a location.","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The location to get the temperature for, in the format \"City, Country\""},"unit":{"type":"string","enum":["celsius","fahrenheit"],"description":"The unit to return the temperature in."}},"required":["location","unit"]},"return":{"type":"number","description":"The current temperature at the specified location in the specified units, as a float."}}},{"type":"function","function":{"name":"get_current_wind_speed","description":"Get the current wind speed in km/h at a given location.","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The location to get the temperature for, in the format \"City, Country\""}},"required":["location"]},"return":{"type":"number","description":"The current wind speed at the given location in km/h, as a float."}}}]
 [END OF AVAILABLE_TOOLS]
 
 
@@ -28,10 +30,11 @@ The example format is as follows. Please make sure the parameter type is correct
     ... (more tool calls as required)
 ]
 ```
-
 [END OF TASK INSTRUCTION]
 
 <|im_end|>
+
 <|im_start|>user
 What is current speed of wind?<|im_end|>
+
 <|im_start|>assistant
