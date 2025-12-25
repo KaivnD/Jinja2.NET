@@ -263,7 +263,8 @@ public class Lexer : ILexer
     private string FindMatchingEndDelimiter(
         int startPosition,
         string startDelimiter,
-        out bool trimRight)
+        out bool trimRight,
+        out int matchedPosition)
     {
         trimRight = false;
 
@@ -361,6 +362,7 @@ public class Lexer : ILexer
                         nearestPosition = i;
                         nearestDelimiter = endDelimiter;
                         trimRight = nearestDelimiter.StartsWith("-") || nearestDelimiter.EndsWith("-");
+                        matchedPosition = nearestPosition;
                         return nearestDelimiter;
                     }
                 }
@@ -369,6 +371,7 @@ public class Lexer : ILexer
             i++;
         }
 
+        matchedPosition = -1;
         throw CreateUnclosedTagException(startPosition);
     }
 
@@ -586,13 +589,8 @@ public class Lexer : ILexer
             var endDelimiter = FindMatchingEndDelimiter(
                 position,
                 startDelimiter,
-                out var trimRight);
-            var endDelimiterPos = _source.IndexOf(endDelimiter, position, StringComparison.Ordinal);
-
-            if (endDelimiterPos == -1)
-            {
-                throw CreateUnclosedTagException(position);
-            }
+                out var trimRight,
+                out var endDelimiterPos);
 
             // Handle block content
             var content = _source.Substring(position, endDelimiterPos - position);
