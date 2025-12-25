@@ -13,20 +13,22 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
         }
 
         // Implement short-circuit evaluation for 'and' / 'or'
+        // Jinja semantics: 'a and b' returns 'a' if a is falsy, otherwise returns 'b'.
+        // 'a or b' returns 'a' if a is truthy, otherwise returns 'b'.
         if (node.Operator.Equals("and", StringComparison.OrdinalIgnoreCase))
         {
             var leftVal = renderer.Visit(node.Left);
-            if (!IsTrue(leftVal)) return false;
+            if (!IsTrue(leftVal)) return leftVal;
             var rightVal = renderer.Visit(node.Right);
-            return IsTrue(rightVal);
+            return rightVal;
         }
 
         if (node.Operator.Equals("or", StringComparison.OrdinalIgnoreCase))
         {
             var leftVal = renderer.Visit(node.Left);
-            if (IsTrue(leftVal)) return true;
+            if (IsTrue(leftVal)) return leftVal;
             var rightVal = renderer.Visit(node.Right);
-            return IsTrue(rightVal);
+            return rightVal;
         }
 
         var left = renderer.Visit(node.Left);
