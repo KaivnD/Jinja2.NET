@@ -56,6 +56,9 @@ public static class BuiltinFilters
             [ToJsonFilter] = (value, args) => JsonSerializer.Serialize(value, jsonOptions)
             ,
             [IndentFilter] = (value, args) => DoIndentFilter(value?.ToString(), args),
+            ["int"] = (value, args) => ConvertToInt(value),
+            ["float"] = (value, args) => ConvertToFloat(value),
+            ["bool"] = (value, args) => ConvertToBool(value),
             ["string"] = (value, args) => value?.ToString() ?? EmptyString
         };
 
@@ -358,6 +361,43 @@ public static class BuiltinFilters
         }
 
         return value.Replace(args[0]?.ToString() ?? EmptyString, args[1]?.ToString() ?? EmptyString);
+    }
+
+    private static object ConvertToInt(object? value)
+    {
+        if (value == null) return 0;
+        if (value is int i) return i;
+        if (value is long l) return (int)l;
+        if (value is bool b) return b ? 1 : 0;
+        if (value is double d) return Convert.ToInt32(d);
+        if (value is float f) return Convert.ToInt32(f);
+        if (value is decimal dec) return Convert.ToInt32(dec);
+        var s = value.ToString();
+        if (int.TryParse(s, out var r)) return r;
+        if (double.TryParse(s, out var rd)) return Convert.ToInt32(rd);
+        return 0;
+    }
+
+    private static object ConvertToFloat(object? value)
+    {
+        if (value == null) return 0.0;
+        if (value is double d) return d;
+        if (value is float f) return (double)f;
+        if (value is int i) return (double)i;
+        if (value is long l) return (double)l;
+        var s = value.ToString();
+        if (double.TryParse(s, out var r)) return r;
+        return 0.0;
+    }
+
+    private static object ConvertToBool(object? value)
+    {
+        if (value == null) return false;
+        if (value is bool b) return b;
+        var s = value.ToString();
+        if (bool.TryParse(s, out var r)) return r;
+        if (int.TryParse(s, out var i)) return i != 0;
+        return !string.IsNullOrEmpty(s);
     }
 
     private static object DoReverseFilter(object value)
