@@ -49,25 +49,25 @@ public class ChatTemplateTests
     [InlineData("meetkai/functionary-medium-v2.2")]
     [InlineData("fireworks-ai/firefunction-v1")]
     [InlineData("maywell/PiVoT-MoE")]
-    // [InlineData("CohereForAI/c4ai-command-r-v01")] // so many python in here, skip for now.
-    [InlineData("CohereForAI/c4ai-command-r-v01 (JSON Schema)")] // macro feature
-    [InlineData("mistralai/Mistral-7B-Instruct-v0.3 (JSON Schema)")] // parsing issue
+    [InlineData("CohereForAI/c4ai-command-r-v01")]
+    [InlineData("CohereForAI/c4ai-command-r-v01 (JSON Schema)")]
+    [InlineData("mistralai/Mistral-7B-Instruct-v0.3 (JSON Schema)")]
     [InlineData("CISCai/Mistral-7B-Instruct-v0.3-SOTA-GGUF")]
-    [InlineData("NousResearch/Hermes-2-Pro-Llama-3-8B (JSON Schema)")] // macro feature
-    [InlineData("mistralai/Mistral-Nemo-Instruct-2407")]  // parsing issue
-    [InlineData("meta-llama/Llama-3.1-8B-Instruct")] // parsing issue
+    [InlineData("NousResearch/Hermes-2-Pro-Llama-3-8B (JSON Schema)")]
+    [InlineData("mistralai/Mistral-Nemo-Instruct-2407")]
+    [InlineData("meta-llama/Llama-3.1-8B-Instruct")]
     [InlineData("deepseek-ai/DeepSeek-R1")]
-    [InlineData("MadeAgents/Hammer2.1")] // parsing issue
-    [InlineData("Qwen/Qwen2.5-7B-Instruct")] // unknown
+    [InlineData("MadeAgents/Hammer2.1")]
+    [InlineData("Qwen/Qwen2.5-7B-Instruct")]
     [InlineData("Qwen/Qwen2.5-VL-7B-Instruct")]
     [InlineData("Qwen/Qwen3-0.6B")]
-    [InlineData("CohereLabs/c4ai-command-a-03-2025")] // macro feature
-    [InlineData("openbmb/MiniCPM3-4B")] // macro feature
-    [InlineData("ai21labs/AI21-Jamba-Large-1.6")] // macro feature
+    [InlineData("CohereLabs/c4ai-command-a-03-2025")]
+    [InlineData("openbmb/MiniCPM3-4B")]
+    [InlineData("ai21labs/AI21-Jamba-Large-1.6")]
     [InlineData("meta-llama/Llama-3.2-11B-Vision-Instruct")]
-    [InlineData("meta-llama/Llama-Guard-3-11B-Vision")]  // parsing issue
-    [InlineData("HuggingFaceTB/SmolLM3-3B")] // parsing issue
-    [InlineData("CohereLabs/command-a-reasoning-08-2025")] // macro feature
+    [InlineData("meta-llama/Llama-Guard-3-11B-Vision")]
+    [InlineData("HuggingFaceTB/SmolLM3-3B")]
+    [InlineData("CohereLabs/command-a-reasoning-08-2025")]
     public void ChatTemplate_Should_Render_Correctly(string m)
     {
         var config = ChatTemplateTestBuilder.GetTemplateConfig(m);

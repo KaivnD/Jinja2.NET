@@ -1,6 +1,9 @@
-<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+<|begin_of_text|>
+
+<|start_header_id|>system<|end_header_id|>
 
 Environment: ipython
+
 Cutting Knowledge Date: December 2023
 Today Date: 26 Jul 2024
 
@@ -10,29 +13,11 @@ Given the following functions, please respond with a JSON for a function call wi
 
 Respond in the format {"name": function name, "parameters": dictionary of argument name and its value}.Do not use variables.
 
-{
-    "type": "function",
-    "function": {
-        "name": "get_current_temperature",
-        "description": "Get the current temperature at a location.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "location": {
-                    "type": "string",
-                    "description": "The location to get the temperature for, in the format \"City, Country\""
-                }
-            },
-            "required": [
-                "location"
-            ]
-        },
-        "return": {
-            "type": "number",
-            "description": "The current temperature at the specified location in the specified units, as a float."
-        }
-    }
-}
+{"type":"function","function":{"name":"get_current_temperature","description":"Get the current temperature at a location.","parameters":{"type":"object","properties":{"location":{"type":"string","description":"The location to get the temperature for, in the format \"City, Country\""}},"required":["location"]},"return":{"type":"number","description":"The current temperature at the specified location in the specified units, as a float."}}}
 
-Hey, what's the temperature in Paris right now?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+    Hey, what's the temperature in Paris right now?<|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>
+
+
 

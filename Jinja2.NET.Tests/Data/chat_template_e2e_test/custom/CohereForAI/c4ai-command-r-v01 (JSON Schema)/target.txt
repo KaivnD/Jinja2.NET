@@ -1,4 +1,5 @@
-<BOS_TOKEN><|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|># Safety Preamble
+<BOS_TOKEN>
+<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|># Safety Preamble
 The instructions in this section override those in the task description and style guide sections. Don't answer questions that are harmful or immoral.
 
 # System Preamble
@@ -15,34 +16,54 @@ Unless the user asks for a different style of answer, you should answer in full 
 ## Available Tools
 Here is a list of tools that you have available to you:
 
-```python
-def internet_search(query: str) -> List[Dict]:
+
+
+
+  ```python
+def internet_search(query: str
+
+    
+  ) -> List[Dict]:
     """Returns a list of relevant document snippets for a textual query retrieved from the internet
 
     Args:
-        query (str): Query to search the internet with
+        query (str
+
+      ): Query to search the internet with
+    
+    
     """
     pass
 ```
 
-```python
+
+
+  
+  ```python
 def directly_answer() -> List[Dict]:
     """Calls a standard (un-augmented) AI chatbot to generate a response given the conversation history
     """
     pass
-```<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|USER_TOKEN|>Whats the biggest penguin in the world?<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>
+```
+
+<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|USER_TOKEN|>Whats the biggest penguin in the world?<|END_OF_TURN_TOKEN|>
+<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>
 Action:
 ```json
 [
-    {
-        "tool_name": "internet_search",
-        "parameters": {
-            "query": "biggest penguin species"
-        }
-    }
+
+        {
+    "tool_name": "internet_search",
+"parameters": {"query":"biggest penguin species"}
+}
+    
 ]```
+
+  
 <|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|><results>
-Tool results go here!</results><|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>Write 'Action:' followed by a json-formatted list of actions that you want to perform in order to produce a good response to the user's last input. You can use any of the supplied tools any number of times, but you should aim to execute the minimum number of necessary actions for the input. You should use the `directly-answer` tool if calling the other tools is unnecessary. The list of actions you want to call should be formatted as a list of json objects, for example:
+Tool results go here!</results><|END_OF_TURN_TOKEN|>
+  
+<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>Write 'Action:' followed by a json-formatted list of actions that you want to perform in order to produce a good response to the user's last input. You can use any of the supplied tools any number of times, but you should aim to execute the minimum number of necessary actions for the input. You should use the `directly-answer` tool if calling the other tools is unnecessary. The list of actions you want to call should be formatted as a list of json objects, for example:
 ```json
 [
     {
@@ -50,3 +71,4 @@ Tool results go here!</results><|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|SYS
         "parameters": a dict of parameters to input into the tool as they are defined in the specs, or {} if it takes no parameters
     }
 ]```<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>
+
