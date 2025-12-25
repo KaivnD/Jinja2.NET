@@ -32,10 +32,19 @@
 // Environment class for template loading and caching
 
 // Example usage and tests
+using Jinja2.NET;
+using Jinja2.NET.Nodes;
+
 public class Program
 {
-    public static void Main()
+    public static void Main(string[] args)
     {
+        if (args != null && args.Length >= 2 && args[0] == "dump-tokens")
+        {
+            DumpTokensAndAst(args[1]);
+            return;
+        }
+
         RunExamples();
     }
 
@@ -86,4 +95,99 @@ public class Program
 
         Console.WriteLine("=== All examples completed ===");
     }
+
+    private static void DumpTokensAndAst(string path)
+    {
+        if (!System.IO.File.Exists(path))
+        {
+            Console.Error.WriteLine($"File not found: {path}");
+            return;
+        }
+
+        var source = System.IO.File.ReadAllText(path);
+        var parser = new MainParser();
+        try
+        {
+            // First tokenize so we can always inspect tokens even if parsing fails
+            var tokens = parser.TokenizeOnly(source);
+
+            Console.WriteLine("Tokens:");
+            var max = tokens.Count;
+            for (int i = 0; i < max; i++)
+            {
+                var t = tokens[i];
+                Console.WriteLine($"{i:000}: {t.Type} '{t.Value.Replace("\n","\\n")} ' @ {t.Line}:{t.Column} (TrimLeft={t.TrimLeft}, TrimRight={t.TrimRight})");
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("AST Summary:");
+            try
+            {
+                var (node, parsedTokens) = parser.ParseWithTokens(source);
+                if (node == null)
+                {
+                    Console.WriteLine("(no AST produced)");
+                }
+                else
+                {
+                    DumpNode(node, 0);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Parse failed: " + ex.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine("Parse failed: " + ex.Message);
+            Console.Error.WriteLine(ex.StackTrace);
+        }
+    }
+
+    private static void DumpNode(object? node, int indent)
+    {
+        var pad = new string(' ', indent * 2);
+        if (node == null)
+        {
+            Console.WriteLine(pad + "(null)");
+            return;
+        }
+
+        switch (node)
+        {
+            case TemplateNode t:
+                Console.WriteLine(pad + "TemplateNode (children=" + t.Children.Count + ")");
+                foreach (var c in t.Children) DumpNode(c, indent + 1);
+                break;
+            case BlockNode b:
+                Console.WriteLine(pad + $"BlockNode name={b.Name} args={b.Arguments.Count} children={b.Children.Count}");
+                foreach (var a in b.Arguments) Console.WriteLine(pad + "  Arg: " + a.GetType().Name);
+                foreach (var c in b.Children) DumpNode(c, indent + 1);
+                break;
+            case TextNode tn:
+                var preview = tn.Content.Length > 60 ? tn.Content.Substring(0, 60).Replace("\n","\\n") + "..." : tn.Content.Replace("\n","\\n");
+                Console.WriteLine(pad + $"TextNode: '{preview}' (TrimLeft={tn.TrimLeft},TrimRight={tn.TrimRight})");
+                break;
+            default:
+                Console.WriteLine(pad + node.GetType().Name);
+                // Try to reflect children properties
+                var props = node.GetType().GetProperties();
+                foreach (var p in props)
+                {
+                    if (p.PropertyType == typeof(List<ASTNode>))
+                    {
+                        var list = p.GetValue(node) as System.Collections.IEnumerable;
+                        if (list != null)
+                        {
+                            int count = 0;
+                            foreach (var _ in list) count++;
+                            Console.WriteLine(pad + $"  {p.Name}: list({count})");
+                        }
+                    }
+                }
+                break;
+        }
+    }
 }
+ 
