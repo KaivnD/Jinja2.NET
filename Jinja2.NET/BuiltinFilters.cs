@@ -21,6 +21,7 @@ public static class BuiltinFilters
     public const string FirstFilter = "first";
     public const string LastFilter = "last";
     public const string ToJsonFilter = "tojson";
+    public const string IndentFilter = "indent";
 
     // Other magic values
     private const string EmptyString = "";
@@ -48,9 +49,14 @@ public static class BuiltinFilters
             [FirstFilter] = (value, args) => DoFirstFilter(value),
             [LastFilter] = (value, args) => DoLastFilter(value),
             ["selectattr"] = (value, args) => DoSelectAttr(value, args),
+            ["rejectattr"] = (value, args) => DoRejectAttr(value, args),
+            ["items"] = (value, args) => DoItemsFilter(value),
             ["map"] = (value, args) => DoMapFilter(value, args),
             ["list"] = (value, args) => DoListFilter(value),
             [ToJsonFilter] = (value, args) => JsonSerializer.Serialize(value, jsonOptions)
+            ,
+            [IndentFilter] = (value, args) => DoIndentFilter(value?.ToString(), args),
+            ["string"] = (value, args) => value?.ToString() ?? EmptyString
         };
 
     public static object ApplyFilter(string filterName, object? value, object[] arguments)
@@ -235,6 +241,93 @@ public static class BuiltinFilters
         return result;
     }
 
+    private static object DoRejectAttr(object value, object[] args)
+    {
+        // rejectattr is inverse of selectattr: return items where test fails
+        if (value == null) return new List<object>();
+        if (!(value is IEnumerable enumerable) || value is string) return value;
+
+        var items = enumerable.Cast<object>();
+
+        string? attrName = args.Length > 0 ? args[0]?.ToString() : null;
+        var testName = args.Length > 1 ? args[1]?.ToString() : "equalto";
+        var compareValue = args.Length > 2 ? args[2] : null;
+
+        if (string.IsNullOrEmpty(attrName)) return items.ToList();
+
+        bool Test(object? val)
+        {
+            if (testName == null) return Equals(val, compareValue);
+            var tn = testName.ToLowerInvariant();
+            return tn switch
+            {
+                "eq" => Equals(val, compareValue),
+                "equalto" => Equals(val, compareValue),
+                "equal" => Equals(val, compareValue),
+                _ => Equals(val, compareValue)
+            };
+        }
+
+        var result = new List<object>();
+        foreach (var it in items)
+        {
+            object? attrVal = null;
+            if (it == null)
+            {
+                attrVal = null;
+            }
+            else if (it is System.Collections.IDictionary dict)
+            {
+                attrVal = dict.Contains(attrName) ? dict[attrName] : null;
+            }
+            else
+            {
+                var t = it.GetType();
+                var prop = t.GetProperty(attrName);
+                if (prop != null) attrVal = prop.GetValue(it);
+                else
+                {
+                    var field = t.GetField(attrName);
+                    if (field != null) attrVal = field.GetValue(it);
+                }
+            }
+
+            if (!Test(attrVal)) result.Add(it);
+        }
+
+        return result;
+    }
+
+    private static object DoItemsFilter(object value)
+    {
+        if (value == null) return new List<object[]>();
+
+        if (value is System.Collections.IDictionary dict)
+        {
+            var list = new List<object[]>();
+            foreach (System.Collections.DictionaryEntry de in dict)
+            {
+                list.Add(new object[] { de.Key, de.Value });
+            }
+            return list;
+        }
+
+        // If it's an object with properties, return property name/value pairs
+        var t = value.GetType();
+        var props = t.GetProperties();
+        if (props.Length > 0)
+        {
+            var list = new List<object[]>();
+            foreach (var p in props)
+            {
+                list.Add(new object[] { p.Name, p.GetValue(value) });
+            }
+            return list;
+        }
+
+        return new List<object[]>();
+    }
+
     private static string DoJoinFilter(object value, object[] args)
     {
         if (value is not IEnumerable enumerable || value is string)
@@ -306,5 +399,39 @@ public static class BuiltinFilters
         }
 
         return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(value.ToLower());
+    }
+
+    private static object DoIndentFilter(string? value, object[] args)
+    {
+        if (string.IsNullOrEmpty(value)) return string.Empty;
+
+        // Defaults
+        int width = 4;
+        bool indentFirst = false;
+
+        // Support kwargs-like first argument (IDictionary) or positional args
+        if (args != null && args.Length > 0)
+        {
+            if (args.Length == 1 && args[0] is System.Collections.IDictionary dict)
+            {
+                if (dict.Contains("width") && int.TryParse(dict["width"]?.ToString(), out var w)) width = w;
+                if (dict.Contains("indentfirst") && bool.TryParse(dict["indentfirst"]?.ToString(), out var b)) indentFirst = b;
+            }
+            else
+            {
+                if (args.Length > 0 && int.TryParse(args[0]?.ToString(), out var w)) width = w;
+                if (args.Length > 1 && bool.TryParse(args[1]?.ToString(), out var b)) indentFirst = b;
+            }
+        }
+
+        var lines = value.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+        var prefix = new string(' ', Math.Max(0, width));
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (i == 0 && !indentFirst) continue;
+            lines[i] = prefix + lines[i];
+        }
+
+        return string.Join("\n", lines);
     }
 }

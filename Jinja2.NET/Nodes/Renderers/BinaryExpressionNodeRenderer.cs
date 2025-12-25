@@ -54,6 +54,12 @@ public class BinaryExpressionNodeRenderer : INodeRenderer
             return ls + rs;
         }
 
+        // If either side is a string, coerce both to string and concatenate
+        if (left is string || right is string)
+        {
+            return (left?.ToString() ?? string.Empty) + (right?.ToString() ?? string.Empty);
+        }
+
         if (left is IEnumerable leftList && right is IEnumerable rightList)
         {
             return ConcatLists(leftList, rightList);

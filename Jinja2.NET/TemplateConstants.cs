@@ -13,6 +13,7 @@ public static class TemplateConstants
         public const string Set = "set";
         public const string Macro = "macro";
         public const string EndMacro = "endmacro";
+        public const string EndSet = "endset";
         public const string Raw = "raw";
         public const string EndRaw = "endraw";
     }

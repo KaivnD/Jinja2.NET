@@ -4,13 +4,27 @@ using Jinja2.NET.Nodes;
 
 namespace Jinja2.NET.Parsers;
 
-public class SetTagParser : ITagParser
+public class SetTagParser : BaseTagParser
 {
-    public ASTNode Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
+    public override ASTNode? Parse(TokenIterator tokens, ITagParserRegistry tagRegistry, IExpressionParser expressionParser,
         IBlockBodyParser blockBodyParser, SourceLocation tagStartLocation, ETokenType tagStartTokenType)
     {
         var blockStartToken = GetBlockStartToken(tokens);
         var targets = ParseTargets(tokens, expressionParser);
+        // After targets, we can have either an assignment form: "set a = expr"
+        // or a block form: "set name %} ... {% endset %}". Detect which one and handle.
+        tokens.SkipWhitespace();
+        // If next token is BlockEnd -> block form
+        if (!tokens.IsAtEnd() && tokens.Peek().Type == ETokenType.BlockEnd)
+        {
+            var endToken = ConsumeBlockEndToken(tokens);
+            var block = CreateSetBlock(targets, new LiteralNode(string.Empty), tagStartTokenType, endToken, blockStartToken);
+            // Parse body until endset
+            ParseBlockBody(tokens, blockBodyParser, block, TemplateConstants.BlockNames.EndSet);
+            return block;
+        }
+
+        // Otherwise it's assignment form
         var expression = ParseAssignmentExpression(tokens, expressionParser, tagStartLocation);
         tokens.SkipWhitespace();
         var nextToken = tokens.Peek();
@@ -21,14 +35,14 @@ public class SetTagParser : ITagParser
             tokens.Consume(ETokenType.Identifier); // Consume 'loop'
         }
 
-        var endToken = ConsumeBlockEndToken(tokens);
-        var block = CreateSetBlock(targets, expression, tagStartTokenType, endToken, blockStartToken);
+        var endTok = ConsumeBlockEndToken(tokens);
+        var assignBlock = CreateSetBlock(targets, expression, tagStartTokenType, endTok, blockStartToken);
         if (isLoopScoped)
         {
-            block.IsLoopScoped = true; // Mark as loop-scoped
+            assignBlock.IsLoopScoped = true; // Mark as loop-scoped
         }
 
-        return block;
+        return assignBlock;
     }
 
     private static Token ConsumeBlockEndToken(TokenIterator tokens)
@@ -149,6 +163,7 @@ public class SetTagParser : ITagParser
 
     private static void ValidateEqualsToken(TokenIterator tokens, SourceLocation tagStartLocation)
     {
+        tokens.SkipAllWhitespace();
         if (tokens.IsAtEnd() || tokens.Peek().Type != ETokenType.Equals)
         {
             throw new TemplateParsingException(

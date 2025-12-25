@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Jinja2.NET.Interfaces;
 using Jinja2.NET.Nodes;
 
@@ -20,7 +21,7 @@ public class StatementParser : IStatementParser
 
     public (ASTNode Node, ETokenType ConsumedStartMarkerType) Parse(TokenIterator tokens)
     {
-        return Parse(tokens, []);
+        return Parse(tokens, Array.Empty<string>());
     }
 
 
@@ -62,7 +63,7 @@ public class StatementParser : IStatementParser
         var tagStartLocation = tokens.CurrentLocation;
         var trimLeft = startToken.TrimLeft;
 
-        tokens.SkipWhitespace();
+        tokens.SkipAllWhitespace();
         var blockNameToken = tokens.Peek();
         if (blockNameToken.Type != ETokenType.Identifier)
         {
@@ -211,9 +212,15 @@ public class StatementParser : IStatementParser
     private (ASTNode, ETokenType) ParseVariable(TokenIterator tokens)
     {
         var startToken = tokens.Consume(ETokenType.VariableStart);
-        tokens.SkipWhitespace();
-        var expression = _expressionParser.Parse(tokens, ETokenType.VariableEnd);
-        tokens.SkipWhitespace();
+
+        // Collect tokens up to the VariableEnd into a separate iterator so the expression
+        // parser cannot accidentally consume tokens beyond the closing marker.
+        var exprTokens = new List<Token>();
+        while (!tokens.IsAtEnd() && tokens.Peek().Type != ETokenType.VariableEnd)
+        {
+            exprTokens.Add(tokens.Consume(tokens.Peek().Type));
+        }
+
         if (tokens.IsAtEnd() || tokens.Peek().Type != ETokenType.VariableEnd)
         {
             throw new InvalidOperationException(
@@ -221,6 +228,18 @@ public class StatementParser : IStatementParser
         }
 
         var endToken = tokens.Consume(ETokenType.VariableEnd);
+
+        ExpressionNode expression;
+        if (exprTokens.Count == 0)
+        {
+            throw new TemplateParsingException(
+                $"Expected expression in variable tag at {startToken.Line}:{startToken.Column}");
+        }
+        else
+        {
+            var exprIterator = new TokenIterator(exprTokens);
+            expression = _expressionParser.Parse(exprIterator, ETokenType.EOF);
+        }
         var node = new VariableNode(expression)
         {
             StartMarkerType = startToken.Type,

@@ -171,7 +171,14 @@ public class IndexNodeRenderer : INodeRenderer
 
         if (target is IDictionary dict)
         {
-            return dict[index];
+            try
+            {
+                return dict.Contains(index) ? dict[index] : null;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         if (target is IList listSingle && index is int idx)
@@ -184,7 +191,7 @@ public class IndexNodeRenderer : INodeRenderer
             }
             if (actual < 0 || actual >= listSingle.Count)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), "Index was out of range.");
+                return null;
             }
             return listSingle[actual];
         }
@@ -200,7 +207,7 @@ public class IndexNodeRenderer : INodeRenderer
                 }
                 if (actual < 0 || actual >= arrSingle.Length)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(index), "Index was out of range.");
+                    return null;
                 }
                 return arrSingle.GetValue(actual);
             }
@@ -216,7 +223,7 @@ public class IndexNodeRenderer : INodeRenderer
             {
                 return strSingle[actual].ToString();
             }
-            throw new ArgumentOutOfRangeException(nameof(index), "Index was out of range.");
+            return null;
         }
 
         throw new InvalidOperationException($"Cannot index into type '{target?.GetType().Name}' with '{index}'.");

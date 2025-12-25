@@ -76,6 +76,30 @@ public class TokenIterator
         return true;
     }
 
+    public static bool IsAllWhitespace(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return true;
+        }
+
+        foreach (var c in value)
+        {
+            if (!char.IsWhiteSpace(c))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public void SkipAllWhitespace()
+    {
+        while (!IsAtEnd() && Peek().Type == ETokenType.Text && IsAllWhitespace(Peek().Value))
+            Consume(ETokenType.Text);
+    }
+
     public bool Match(ETokenType type, string value)
     {
         if (!IsAtEnd() && Peek().Type == type && Peek().Value.Equals(value, StringComparison.OrdinalIgnoreCase))

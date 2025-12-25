@@ -284,8 +284,11 @@ public class ExpressionParser : IExpressionParser
         {
             tokens.Consume(token.Type);
             tokens.SkipWhitespace();
-            // Parse a full binary expression as the operand (allowing 'is', 'in', etc.)
-            var operand = ParseBinary(tokens, /*parentPrecedence*/ 0, stopTokenType);
+            // Parse a binary expression as the operand but prevent swallowing lower-precedence
+            // logical operators like 'and'. Use parent precedence equal to 'and' so that
+            // constructs like "is not none and ..." are parsed as
+            // (left is not none) and ... instead of is not (none and ...).
+            var operand = ParseBinary(tokens, /*parentPrecedence*/ 15, stopTokenType);
             return new UnaryExpressionNode(token.Value, operand);
         }
 

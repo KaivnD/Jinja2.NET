@@ -271,23 +271,102 @@ public class Lexer : ILexer
                                       ? _config.EndDelimiters[startDelimiter]
                                       : Array.Empty<string>();
 
+        if (candidateDelimiters.Length == 0)
+            throw CreateUnclosedTagException(startPosition);
+
+        // Scan the source from startPosition and ignore delimiters that appear inside
+        // single- or double-quoted string literals. This prevents prematurely ending
+        // a tag when the content contains '}}' or '%}' inside strings.
         var nearestPosition = -1;
         string? nearestDelimiter = null;
 
-        foreach (var endDelimiter in candidateDelimiters)
+        var i = startPosition;
+        var len = _source.Length;
+        // For comment blocks ({# ... #}), string quoting inside the comment
+        // should not affect finding the end delimiter. Only skip string
+        // contents for variable/block tags ({{ ... }} / {% ... %}).
+        var isComment = startDelimiter.Replace("-", "") == "{#";
+        var inSingle = false;
+        var inDouble = false;
+        while (i < len)
         {
-            var position = _source.IndexOf(endDelimiter, startPosition, StringComparison.Ordinal);
-            if (position != -1 && (nearestPosition == -1 || position < nearestPosition))
-            {
-                nearestPosition = position;
-                nearestDelimiter = endDelimiter;
-            }
-        }
+            var c = _source[i];
 
-        if (nearestDelimiter != null)
-        {
-            trimRight = nearestDelimiter.StartsWith("-") || nearestDelimiter.EndsWith("-");
-            return nearestDelimiter;
+            // handle escape (only relevant when we're tracking string quoting)
+            if (!isComment)
+            {
+                if (c == '\\')
+                {
+                    // skip escaped char (backslash + next char)
+                    i += 2;
+                    continue;
+                }
+
+                // If we encounter a quote, skip the entire quoted string (respect escapes)
+                if (c == '\'')
+                {
+                    i++; // move past opening single quote
+                    while (i < len)
+                    {
+                        if (_source[i] == '\\')
+                        {
+                            i += 2; // skip escaped char inside string
+                            continue;
+                        }
+
+                        if (_source[i] == '\'')
+                        {
+                            i++; // consume closing quote
+                            break;
+                        }
+
+                        i++;
+                    }
+
+                    continue;
+                }
+
+                if (c == '"')
+                {
+                    i++; // move past opening double quote
+                    while (i < len)
+                    {
+                        if (_source[i] == '\\')
+                        {
+                            i += 2; // skip escaped char inside string
+                            continue;
+                        }
+
+                        if (_source[i] == '"')
+                        {
+                            i++; // consume closing quote
+                            break;
+                        }
+
+                        i++;
+                    }
+
+                    continue;
+                }
+            }
+
+            if (isComment || (!inSingle && !inDouble))
+            {
+                foreach (var endDelimiter in candidateDelimiters)
+                {
+                    if (i + endDelimiter.Length <= len &&
+                        _source.AsSpan(i, endDelimiter.Length).SequenceEqual(endDelimiter.AsSpan()))
+                    {
+                        // record nearest and return
+                        nearestPosition = i;
+                        nearestDelimiter = endDelimiter;
+                        trimRight = nearestDelimiter.StartsWith("-") || nearestDelimiter.EndsWith("-");
+                        return nearestDelimiter;
+                    }
+                }
+            }
+
+            i++;
         }
 
         throw CreateUnclosedTagException(startPosition);
