@@ -14,8 +14,57 @@ public class SetBlockRenderer : INodeRenderer
         }
 
         var targets = setNode.Arguments.Take(setNode.Arguments.Count - 1).ToList();
-        var valueNode = setNode.Arguments.Last();
-        var value = renderer.Visit(valueNode);
+        object? value;
+
+        // If the set block has children, it's the block-form: capture rendered children as the value
+        if (setNode.Children != null && setNode.Children.Count > 0)
+        {
+            // Determine variables that will be set inside this block so they can be propagated
+            var setVariables = GetVariablesBeingSet(setNode);
+
+            // Trim whitespace for block children
+            WhitespaceTrimmer.ApplyWhitespaceTrimming(setNode.Children);
+
+            // Render children into a string within a new scope
+            renderer.ScopeManager.PushScope();
+            try
+            {
+                var currentScope = renderer.ScopeManager.CurrentScope();
+                var parentScope = renderer.ScopeManager.ParentScope();
+
+                foreach (var kvp in parentScope)
+                {
+                    currentScope[kvp.Key] = kvp.Value;
+                }
+
+                var sb = new System.Text.StringBuilder();
+                foreach (var child in setNode.Children)
+                {
+                    var childResult = renderer.Visit(child);
+                    if (childResult != null)
+                    {
+                        sb.Append(childResult);
+                    }
+                }
+
+                // Propagate set variables back to parent scope if needed
+                renderer.ScopeManager.PropagateVariablesToParent(renderer.Context, string.Empty, setVariables);
+
+                var raw = sb.ToString();
+                // Trim leading/trailing whitespace from captured content
+                raw = raw.Trim();
+                value = raw;
+            }
+            finally
+            {
+                renderer.ScopeManager.PopScope();
+            }
+        }
+        else
+        {
+            var valueNode = setNode.Arguments.Last();
+            value = renderer.Visit(valueNode);
+        }
 
         foreach (var target in targets)
         {
@@ -56,6 +105,43 @@ public class SetBlockRenderer : INodeRenderer
 
 
         return null;
+    }
+
+    private static HashSet<string> GetVariablesBeingSet(BlockNode node)
+    {
+        var setVariables = new HashSet<string>();
+
+        void AnalyzeNode(ASTNode n)
+        {
+            if (n is BlockNode b)
+            {
+                if (b.Name == TemplateConstants.BlockNames.Set)
+                {
+                    foreach (var arg in b.Arguments.OfType<IdentifierNode>().Take(b.Arguments.Count - 1))
+                    {
+                        setVariables.Add(arg.Name);
+                    }
+                }
+
+                if (b.Children != null)
+                {
+                    foreach (var child in b.Children)
+                    {
+                        AnalyzeNode(child);
+                    }
+                }
+            }
+        }
+
+        if (node.Children != null)
+        {
+            foreach (var child in node.Children)
+            {
+                AnalyzeNode(child);
+            }
+        }
+
+        return setVariables;
     }
 
     private void SetMember(object obj, string memberName, object? value)

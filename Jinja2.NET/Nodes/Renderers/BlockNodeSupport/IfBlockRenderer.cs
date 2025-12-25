@@ -71,8 +71,20 @@ public class IfBlockRenderer : INodeRenderer
                 currentScope[kvp.Key] = kvp.Value;
             }
 
-            foreach (var child in node.Children ?? [])
+            // If the first child is a whitespace-only TextNode followed by a block-form `set`,
+            // skip that leading whitespace so captured block content isn't prefixed by indentation.
+            var childrenToRender = node.Children ?? new List<ASTNode>();
+            int startIndex = 0;
+            if (childrenToRender.Count >= 2 && childrenToRender[0] is TextNode firstText && string.IsNullOrWhiteSpace(firstText.Content)
+                && childrenToRender[1] is BlockNode firstBlock && firstBlock.Name == TemplateConstants.BlockNames.Set
+                && firstBlock.Children != null && firstBlock.Children.Count > 0)
             {
+                startIndex = 1;
+            }
+
+            for (int ci = startIndex; ci < childrenToRender.Count; ci++)
+            {
+                var child = childrenToRender[ci];
                 // Skip elif/else blocks when rendering main if content
                 if (child is BlockNode childBlock &&
                     (childBlock.Name == TemplateConstants.BlockNames.Elif ||
@@ -82,6 +94,7 @@ public class IfBlockRenderer : INodeRenderer
                 }
 
                 var childResult = renderer.Visit(child);
+                // debug logging removed
                 if (childResult != null)
                 {
                     result.Append(childResult);
